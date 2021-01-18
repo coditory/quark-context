@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-class HierarchyIterator implements Iterator<Class<?>> {
+final class HierarchyIterator implements Iterator<Class<?>> {
     public static Set<Class<?>> getClassHierarchy(Class<?> forClass) {
         Iterable<Class<?>> iterable = () -> new HierarchyIterator(forClass);
         return StreamSupport

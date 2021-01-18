@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.function.Predicate;
 
-class ClasspathScanner implements Iterator<Class<?>> {
+final class ClasspathScanner implements Iterator<Class<?>> {
     static ClasspathScanner scanPackageAndSubPackages(String packageName) {
         return scanPackageAndSubPackages(packageName, (name) -> true);
     }

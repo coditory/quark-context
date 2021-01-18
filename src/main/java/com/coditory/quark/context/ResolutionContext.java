@@ -1,73 +1,66 @@
 package com.coditory.quark.context;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static java.util.Collections.unmodifiableList;
+import static com.coditory.quark.context.Args.checkNonNull;
 
-public class ResolutionContext {
+public final class ResolutionContext {
     private final Context context;
-    private final List<ResolutionElement> resolutionPath;
-
-    static ResolutionContext start(Context context, Class<?> type, String name) {
-        return new ResolutionContext(context, List.of(new ResolutionElement(type, name)));
-    }
+    private final ResolutionPath path;
 
     ResolutionContext(
             Context context,
-            List<ResolutionElement> resolutionPath
+            ResolutionPath path
     ) {
         this.context = context;
-        this.resolutionPath = resolutionPath;
+        this.path = path;
     }
 
-    private List<ResolutionElement> nextPath(Class<?> type) {
-        return nextPath(type, null);
+    public <T> T get(Class<T> type) {
+        checkNonNull(type, "type");
+        return context.get(type, path);
     }
 
-    private List<ResolutionElement> nextPath(Class<?> type, String name) {
-        ResolutionElement element = new ResolutionElement(type, name);
-        List<ResolutionElement> path = new ArrayList<>(resolutionPath);
-        path.add(element);
-        if (resolutionPath.contains(element)) {
-            String circle = path.stream()
-                    .map(ResolutionElement::toShortString)
-                    .collect(Collectors.joining(" -> "));
-            throw new ContextException("Detected circular dependency: " + circle);
-        }
-        return unmodifiableList(path);
+    public <T> T getOrNull(Class<T> type) {
+        checkNonNull(type, "type");
+        return context.getOrNull(type, path);
     }
 
-    public <T> T get(Class<T> clazz) {
-        return context.get(clazz, nextPath(clazz));
+    public <T> T get(Class<T> type, String name) {
+        checkNonNull(type, "type");
+        checkNonNull(name, "name");
+        return context.get(type, name, path);
     }
 
-    public <T> T getOrNull(Class<T> clazz) {
-        return context.getOrNull(clazz, nextPath(clazz));
+    public <T> T getOrNull(Class<T> type, String name) {
+        checkNonNull(type, "type");
+        checkNonNull(name, "name");
+        return context.getOrNull(type, name, path);
     }
 
-    public <T> T get(String name, Class<T> clazz) {
-        return context.get(clazz, nextPath(clazz, name));
-    }
-
-    public <T> T getOrNull(String name, Class<T> clazz) {
-        return context.getOrNull(clazz, nextPath(clazz, name));
-    }
-
-    public boolean contains(Class<?> clazz) {
-        return context.contains(clazz);
+    public boolean contains(Class<?> type) {
+        checkNonNull(type, "type");
+        return context.contains(type);
     }
 
     public boolean contains(String name) {
+        checkNonNull(name, "name");
         return context.contains(name);
     }
 
-    public <T> List<T> getAll(Class<T> clazz) {
-        return context.getAll(clazz, nextPath(clazz));
+    public boolean contains(Class<?> type, String name) {
+        checkNonNull(type, "type");
+        checkNonNull(name, "name");
+        return context.contains(type, name);
     }
 
-    public <T> List<T> getAllOrEmpty(Class<T> clazz) {
-        return context.getAllOrEmpty(clazz, nextPath(clazz));
+    public <T> List<T> getAll(Class<T> type) {
+        checkNonNull(type, "type");
+        return context.getAll(type, path);
+    }
+
+    public <T> List<T> getAllOrEmpty(Class<T> type) {
+        checkNonNull(type, "type");
+        return context.getAllOrEmpty(type, path);
     }
 }

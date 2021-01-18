@@ -1,6 +1,6 @@
 package com.coditory.quark.context;
 
-public class ContextException extends RuntimeException {
+public final class ContextException extends RuntimeException {
     public ContextException(String message) {
         super(message);
     }

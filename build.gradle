@@ -14,6 +14,7 @@ description = 'Coditory Quark Configuration Library'
 
 dependencies {
     api 'org.slf4j:slf4j-api:1.7.30'
+    api 'org.jetbrains:annotations:16.0.1'
     testImplementation 'ch.qos.logback:logback-classic:1.2.3'
     testImplementation 'org.spockframework:spock-core:2.0-M4-groovy-3.0'
     testImplementation 'org.skyscreamer:jsonassert:1.5.0'

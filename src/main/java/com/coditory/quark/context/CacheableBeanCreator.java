@@ -5,16 +5,16 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
-class CacheableBeanCreator<T> implements BeanCreator<T> {
-    static List<BeanCreator<?>> cacheable(List<BeanCreator<?>> creators) {
+final class CacheableBeanCreator<T> implements BeanCreator<T> {
+    static List<CacheableBeanCreator<?>> cacheable(List<BeanCreator<?>> creators) {
         return creators.stream()
                 .map(CacheableBeanCreator::cacheable)
                 .collect(toList());
     }
 
-    static <T> BeanCreator<T> cacheable(BeanCreator<T> creator) {
+    static <T> CacheableBeanCreator<T> cacheable(BeanCreator<T> creator) {
         return creator instanceof CacheableBeanCreator
-                ? creator
+                ? (CacheableBeanCreator<T>) creator
                 : new CacheableBeanCreator<>(creator);
     }
 
@@ -23,6 +23,10 @@ class CacheableBeanCreator<T> implements BeanCreator<T> {
 
     CacheableBeanCreator(BeanCreator<T> creator) {
         this.creator = requireNonNull(creator);
+    }
+
+    boolean isCached() {
+        return bean != null;
     }
 
     @Override
