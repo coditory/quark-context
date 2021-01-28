@@ -1,7 +1,7 @@
 package annotated.samples.beans_lifecycle
 
-import com.coditory.quark.context.Close
-import com.coditory.quark.context.Init
+import com.coditory.quark.context.annotations.Close
+import com.coditory.quark.context.annotations.Init
 
 class Baz {
     boolean initialized = false

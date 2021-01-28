@@ -1,5 +1,7 @@
 package com.coditory.quark.context;
 
+import com.coditory.quark.context.annotations.Init;
+
 import java.lang.reflect.Method;
 
 import static com.coditory.quark.context.DependencyResolver.resolveArguments;

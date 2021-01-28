@@ -3,6 +3,7 @@ package com.coditory.quark.context;
 import java.util.List;
 
 import static com.coditory.quark.context.Args.checkNonNull;
+import static com.coditory.quark.context.BeanDescriptor.descriptor;
 
 public final class ResolutionContext {
     private final Context context;
@@ -18,24 +19,24 @@ public final class ResolutionContext {
 
     public <T> T get(Class<T> type) {
         checkNonNull(type, "type");
-        return context.get(type, path);
+        return context.get(descriptor(type), path);
     }
 
     public <T> T getOrNull(Class<T> type) {
         checkNonNull(type, "type");
-        return context.getOrNull(type, path);
+        return context.getOrNull(descriptor(type), path);
     }
 
     public <T> T get(Class<T> type, String name) {
         checkNonNull(type, "type");
         checkNonNull(name, "name");
-        return context.get(type, name, path);
+        return context.get(descriptor(type, name), path);
     }
 
     public <T> T getOrNull(Class<T> type, String name) {
         checkNonNull(type, "type");
         checkNonNull(name, "name");
-        return context.getOrNull(type, name, path);
+        return context.getOrNull(descriptor(type, name), path);
     }
 
     public boolean contains(Class<?> type) {

@@ -1,7 +1,7 @@
 package annotated.samples.named_bean
 
-import com.coditory.quark.context.Bean
-import com.coditory.quark.context.Dependency
+import com.coditory.quark.context.annotations.Bean
+import com.coditory.quark.context.annotations.Dependency
 
 @Bean
 class Bar {

@@ -1,5 +1,8 @@
 package com.coditory.quark.context;
 
+import com.coditory.quark.context.annotations.ConditionalOnBean;
+import com.coditory.quark.context.annotations.Inject;
+
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
@@ -31,12 +34,14 @@ final class ConstructorBasedBeanCreator<T> implements BeanCreator<T> {
             }
         }
         constructor.setAccessible(true);
-        return new ConstructorBasedBeanCreator<>(constructor);
+        return new ConstructorBasedBeanCreator<>(type, constructor);
     }
 
+    private final Class<T> type;
     private final Constructor<T> constructor;
 
-    ConstructorBasedBeanCreator(Constructor<T> constructor) {
+    ConstructorBasedBeanCreator(Class<T> type, Constructor<T> constructor) {
+        this.type = requireNonNull(type);
         this.constructor = requireNonNull(constructor);
     }
 
@@ -48,5 +53,10 @@ final class ConstructorBasedBeanCreator<T> implements BeanCreator<T> {
         } catch (Exception e) {
             throw new ContextException("Could no create bean from constructor: " + constructor, e);
         }
+    }
+
+    @Override
+    public boolean isActive(ConditionContext context) {
+        return ConditionsResolver.isActive(context, type);
     }
 }

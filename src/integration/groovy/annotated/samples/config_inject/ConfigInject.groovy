@@ -1,8 +1,8 @@
 package annotated.samples.config_inject
 
-import com.coditory.quark.context.Bean
-import com.coditory.quark.context.Inject
-import com.coditory.quark.context.Configuration
+import com.coditory.quark.context.annotations.Bean
+import com.coditory.quark.context.annotations.Inject
+import com.coditory.quark.context.annotations.Configuration
 
 @Configuration
 class ConfigInject {

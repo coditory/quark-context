@@ -1,10 +1,10 @@
 package annotated.samples.beans_lifecycle
 
-import com.coditory.quark.context.Bean
-import com.coditory.quark.context.Close
-import com.coditory.quark.context.Configuration
-import com.coditory.quark.context.Init
-import com.coditory.quark.context.Inject
+import com.coditory.quark.context.annotations.Bean
+import com.coditory.quark.context.annotations.Close
+import com.coditory.quark.context.annotations.Configuration
+import com.coditory.quark.context.annotations.Init
+import com.coditory.quark.context.annotations.Inject
 
 import static java.util.Objects.requireNonNull
 

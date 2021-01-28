@@ -1,8 +1,8 @@
 package annotated.samples.config
 
-import com.coditory.quark.context.Bean
-import com.coditory.quark.context.Dependency
-import com.coditory.quark.context.Configuration
+import com.coditory.quark.context.annotations.Bean
+import com.coditory.quark.context.annotations.Dependency
+import com.coditory.quark.context.annotations.Configuration
 
 @Configuration
 class SampleConfig {

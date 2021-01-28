@@ -4,28 +4,32 @@ import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-final class BeanDescriptor {
-    private String name;
-    private Class<?> type;
-
-    BeanDescriptor(Class<?> type) {
-        this(type, null);
+final class BeanDescriptor<T> {
+    public static <T> BeanDescriptor<T> descriptor(Class<T> type) {
+        return new BeanDescriptor<>(type, null);
     }
 
-    BeanDescriptor(Class<?> type, String name) {
+    public static <T> BeanDescriptor<T> descriptor(Class<T> type, String name) {
+        return new BeanDescriptor<>(type, name);
+    }
+
+    private final String name;
+    private final Class<T> type;
+
+    private BeanDescriptor(Class<T> type, String name) {
         this.type = requireNonNull(type);
         this.name = name;
     }
 
-    BeanDescriptor withType(Class<?> type) {
-        return new BeanDescriptor(type, name);
+    <R> BeanDescriptor<R> withType(Class<R> type) {
+        return new BeanDescriptor<>(type, name);
     }
 
     String getName() {
         return name;
     }
 
-    Class<?> getType() {
+    Class<T> getType() {
         return type;
     }
 
@@ -37,12 +41,19 @@ final class BeanDescriptor {
                 '}';
     }
 
+    String toShortString() {
+        return name != null
+                ? type.getCanonicalName() + "(name: " + name + ")"
+                : type.getCanonicalName();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BeanDescriptor that = (BeanDescriptor) o;
-        return Objects.equals(name, that.name) && Objects.equals(type, that.type);
+        BeanDescriptor<?> that = (BeanDescriptor<?>) o;
+        return Objects.equals(name, that.name)
+                && Objects.equals(type, that.type);
     }
 
     @Override

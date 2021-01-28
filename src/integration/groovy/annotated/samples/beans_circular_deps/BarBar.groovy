@@ -1,6 +1,6 @@
 package annotated.samples.beans_circular_deps
 
-import com.coditory.quark.context.Bean
+import com.coditory.quark.context.annotations.Bean
 
 import static java.util.Objects.requireNonNull;
 

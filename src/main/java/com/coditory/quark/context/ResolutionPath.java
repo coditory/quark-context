@@ -45,6 +45,10 @@ final class ResolutionPath {
         return add(type, null);
     }
 
+    ResolutionPath add(BeanDescriptor<?> descriptor) {
+        return add(descriptor.getType(), descriptor.getName());
+    }
+
     ResolutionPath add(Class<?> type, String name) {
         ResolutionElement element = new ResolutionElement(type, name);
         List<ResolutionElement> newPath = new ArrayList<>(path);

@@ -1,5 +1,7 @@
 package com.coditory.quark.context;
 
+import com.coditory.quark.context.annotations.Close;
+
 import java.io.Closeable;
 import java.lang.reflect.Method;
 

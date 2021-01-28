@@ -1,21 +1,32 @@
 package com.coditory.quark.context;
 
+import com.coditory.quark.context.annotations.Bean;
+import com.coditory.quark.context.annotations.Configuration;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static com.coditory.quark.context.Args.checkNonNull;
-import static com.coditory.quark.context.CacheableBeanCreator.cacheable;
+import static com.coditory.quark.context.BeanDescriptor.descriptor;
+import static com.coditory.quark.context.BeanHolder.holder;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public final class ContextBuilder {
-    private final Map<BeanDescriptor, List<CacheableBeanCreator<?>>> beanCreators = new LinkedHashMap<>();
-    private final Set<String> beanNames = new HashSet<>();
+    private final Set<BeanHolder<?>> beanHolders = new LinkedHashSet<>();
+    private final Map<String, Object> properties = new LinkedHashMap<>();
 
     public ContextBuilder scanPackage(Class<?> type) {
         checkNonNull(type, "type");
@@ -58,23 +69,23 @@ public final class ContextBuilder {
 
     private <T> void addAnnotatedBeanClass(Class<T> type) {
         Bean annotation = type.getAnnotation(Bean.class);
-        BeanCreator<T> creator = new CacheableBeanCreator<>(ConstructorBasedBeanCreator.fromConstructor(type));
+        BeanCreator<T> creator = ConstructorBasedBeanCreator.fromConstructor(type);
         addAnnotatedCreator(annotation, type, creator);
     }
 
     private <T> void addBeansFromConfiguration(Class<T> type) {
-        BeanCreator<T> objectCreator = new CacheableBeanCreator<>(ConstructorBasedBeanCreator.fromConstructor(type));
-        add(type, objectCreator);
+        BeanHolder<T> holder = holder(descriptor(type), ConstructorBasedBeanCreator.fromConstructor(type));
+        addBeanHolder(holder);
         for (Method method : type.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Bean.class)) {
                 method.setAccessible(true);
-                addFromAnnotatedConfiguration(objectCreator, method, method.getReturnType());
+                addFromAnnotatedConfiguration(holder, method, method.getReturnType());
             }
         }
     }
 
-    private <T> void addFromAnnotatedConfiguration(BeanCreator<?> objectCreator, Method method, Class<T> returnType) {
-        BeanCreator<T> creator = new MethodBasedBeanCreator<>(objectCreator, method);
+    private <T> void addFromAnnotatedConfiguration(BeanHolder<?> holder, Method method, Class<T> returnType) {
+        BeanCreator<T> creator = new MethodBasedBeanCreator<>(holder, method);
         Bean annotation = method.getAnnotation(Bean.class);
         addAnnotatedCreator(annotation, returnType, creator);
     }
@@ -88,6 +99,19 @@ public final class ContextBuilder {
         } else {
             add(type, name, creator);
         }
+    }
+
+    public <T> ContextBuilder setProperty(String name, Object value) {
+        checkNonNull(name, "name");
+        checkNonNull(value, "value");
+        properties.put(name, value);
+        return this;
+    }
+
+    public <T> ContextBuilder setProperties(Map<String, Object> properties) {
+        checkNonNull(properties, "properties");
+        this.properties.putAll(properties);
+        return this;
     }
 
     @SuppressWarnings("unchecked")
@@ -106,7 +130,7 @@ public final class ContextBuilder {
     public <T> ContextBuilder add(Class<T> type, BeanCreator<T> beanCreator) {
         checkNonNull(type, "type");
         checkNonNull(beanCreator, "beanCreator");
-        addBeanCreator(new BeanDescriptor(type), beanCreator);
+        addBeanHolder(holder(descriptor(type), beanCreator));
         return this;
     }
 
@@ -114,31 +138,18 @@ public final class ContextBuilder {
         checkNonNull(type, "type");
         checkNonNull(name, "name");
         checkNonNull(beanCreator, "beanCreator");
-        addBeanName(name);
-        addBeanCreator(new BeanDescriptor(type, name), beanCreator);
+        addBeanHolder(holder(descriptor(type, name), beanCreator));
         return this;
     }
 
-    private <T> void addBeanName(String name) {
-        if (beanNames.contains(name)) {
-            throw new IllegalArgumentException("Duplicated bean name: " + name);
-        }
-        beanNames.add(name);
-    }
-
-    private <T> void addBeanCreator(BeanDescriptor beanDescriptor, BeanCreator<T> beanCreator) {
-        CacheableBeanCreator<T> cacheableCreator = cacheable(beanCreator);
-        Set<Class<?>> types = HierarchyIterator.getClassHierarchy(beanDescriptor.getType());
-        types.forEach(type -> {
-            List<CacheableBeanCreator<?>> registeredBeanCreators = beanCreators
-                    .computeIfAbsent(beanDescriptor.withType(type), (k) -> new ArrayList<>());
-            registeredBeanCreators.add(cacheableCreator);
-        });
+    private void addBeanHolder(BeanHolder<?> holder) {
+        beanHolders.add(holder);
     }
 
     public Context buildEager() {
-        Context context = new Context(beanCreators);
-        beanCreators.forEach((descriptor, creator) -> {
+        Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = resolveConditionalBeans();
+        Context context = new Context(holders, properties);
+        holders.forEach((descriptor, creator) -> {
             if (descriptor.getName() != null) {
                 context.get(descriptor.getType(), descriptor.getName());
             } else {
@@ -150,8 +161,12 @@ public final class ContextBuilder {
     }
 
     public Context build() {
-        Context context = new Context(beanCreators);
+        Context context = new Context(resolveConditionalBeans(), properties);
         context.init();
         return context;
+    }
+
+    private Map<BeanDescriptor<?>, List<BeanHolder<?>>> resolveConditionalBeans() {
+        return ContextResolver.resolve(beanHolders, properties);
     }
 }

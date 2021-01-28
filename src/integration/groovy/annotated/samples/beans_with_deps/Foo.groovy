@@ -1,7 +1,7 @@
 package annotated.samples.beans_with_deps
 
-import com.coditory.quark.context.Bean
-import com.coditory.quark.context.Inject
+import com.coditory.quark.context.annotations.Bean
+import com.coditory.quark.context.annotations.Inject
 
 import static java.util.Objects.requireNonNull
 

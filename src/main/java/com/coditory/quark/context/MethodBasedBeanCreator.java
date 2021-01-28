@@ -7,22 +7,27 @@ import static java.util.Objects.requireNonNull;
 
 final class MethodBasedBeanCreator<T> implements BeanCreator<T> {
     private final Method method;
-    private final BeanCreator<?> creator;
+    private final BeanHolder<?> holder;
 
-    public MethodBasedBeanCreator(BeanCreator<?> creator, Method method) {
-        this.creator = requireNonNull(creator);
+    public MethodBasedBeanCreator(BeanHolder<?> holder, Method method) {
+        this.holder = requireNonNull(holder);
         this.method = requireNonNull(method);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public T create(ResolutionContext context) {
-        Object object = creator.create(context);
+        Object object = holder.get(context);
         Object[] args = resolveArguments(method, context);
         try {
             return (T) method.invoke(object, args);
         } catch (Exception e) {
             throw new ContextException("Could not create bean from method: " + method, e);
         }
+    }
+
+    @Override
+    public boolean isActive(ConditionContext context) {
+        return holder.isActive(context) && ConditionsResolver.isActive(context, method);
     }
 }

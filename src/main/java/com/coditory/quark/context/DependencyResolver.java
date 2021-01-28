@@ -1,5 +1,7 @@
 package com.coditory.quark.context;
 
+import com.coditory.quark.context.annotations.Dependency;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;

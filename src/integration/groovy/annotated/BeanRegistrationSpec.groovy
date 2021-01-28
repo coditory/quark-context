@@ -33,7 +33,7 @@ class BeanRegistrationSpec extends Specification {
 
         then:
             ContextException e = thrown(ContextException)
-            e.message == "Could not create bean of type: ${annotated.samples.beans_circular_deps.Bar.class.canonicalName}"
+            e.message == "Could not create bean: ${annotated.samples.beans_circular_deps.Bar.class.canonicalName}"
             e.cause.message == "Detected circular dependency: Bar -> Baz -> Foo -> Bar"
     }
 
@@ -45,7 +45,7 @@ class BeanRegistrationSpec extends Specification {
 
         then:
             ContextException e = thrown(ContextException)
-            e.message == "Could not create bean of type: ${annotated.samples.beans_circular_deps.BarBar.class.canonicalName}"
+            e.message == "Could not create bean: ${annotated.samples.beans_circular_deps.BarBar.class.canonicalName}"
             e.cause.message == "Detected circular dependency: BarBar -> BarBar"
     }
 

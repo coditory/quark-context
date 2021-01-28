@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.coditory.quark.context.Args.checkNonNull;
+import static com.coditory.quark.context.BeanDescriptor.descriptor;
 import static com.coditory.quark.context.BeanFinalizer.closeBean;
 import static com.coditory.quark.context.BeanInitializer.initializeBean;
 import static com.coditory.quark.context.ResolutionPath.emptyResolutionPath;
@@ -21,6 +22,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public final class Context implements Closeable {
     public static Context scanPackage(Class<?> type) {
@@ -35,25 +37,30 @@ public final class Context implements Closeable {
     }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final Map<Class<?>, List<CacheableBeanCreator<?>>> beanCreatorsByType;
-    private final Map<BeanDescriptor, List<CacheableBeanCreator<?>>> beanCreators;
+    private final Map<Class<?>, List<BeanHolder<?>>> beanHoldersByType;
+    private final Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders;
+    private final Set<BeanHolder<?>> holders;
     private final Set<String> beanNames;
-    private final Set<Object> createdBeans = new HashSet<>();
+    private final Map<String, Object> properties;
     private final ResolutionContext emptyResolutionContext = new ResolutionContext(this, emptyResolutionPath());
     private boolean closed = false;
 
-    Context(Map<BeanDescriptor, List<CacheableBeanCreator<?>>> beanCreators) {
-        this.beanCreators = requireNonNull(beanCreators);
-        this.beanCreatorsByType = groupBeanCreatorsByType(beanCreators);
-        this.beanNames = beanCreators.keySet().stream()
+    Context(Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders, Map<String, Object> properties) {
+        this.beanHolders = requireNonNull(beanHolders);
+        this.properties = Map.copyOf(properties);
+        this.beanHoldersByType = groupBeanCreatorsByType(beanHolders);
+        this.holders = beanHolders.values().stream()
+                .flatMap(Collection::stream)
+                .collect(toUnmodifiableSet());
+        this.beanNames = beanHolders.keySet().stream()
                 .map(BeanDescriptor::getName)
                 .collect(toSet());
     }
 
-    private Map<Class<?>, List<CacheableBeanCreator<?>>> groupBeanCreatorsByType(Map<BeanDescriptor, List<CacheableBeanCreator<?>>> beanCreators) {
-        Map<Class<?>, List<CacheableBeanCreator<?>>> beanCreatorsByType = new HashMap<>();
+    private Map<Class<?>, List<BeanHolder<?>>> groupBeanCreatorsByType(Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanCreators) {
+        Map<Class<?>, List<BeanHolder<?>>> beanCreatorsByType = new HashMap<>();
         beanCreators.forEach((key, value) -> {
-            List<CacheableBeanCreator<?>> creators = beanCreatorsByType.computeIfAbsent(key.getType(), (k) -> new ArrayList<>());
+            List<BeanHolder<?>> creators = beanCreatorsByType.computeIfAbsent(key.getType(), (k) -> new ArrayList<>());
             creators.addAll(value);
         });
         return beanCreatorsByType.entrySet().stream()
@@ -62,91 +69,65 @@ public final class Context implements Closeable {
     }
 
     void init() {
-        beanCreators.values().stream()
-                .flatMap(Collection::stream)
-                .filter(CacheableBeanCreator::isCached)
+        holders.stream()
+                .filter(BeanHolder::isCached)
                 .forEach(creator -> {
-                    Object bean = creator.create(emptyResolutionContext);
+                    Object bean = creator.get(emptyResolutionContext);
                     initializeBean(bean, emptyResolutionContext);
-                    createdBeans.add(bean);
                 });
     }
 
     public <T> T get(Class<T> type) {
         checkNonNull(type, "type");
-        return get(type, emptyResolutionPath());
-    }
-
-    <T> T get(Class<T> type, ResolutionPath path) {
-        T bean = getOrNull(type, path);
-        if (bean == null) {
-            throw new ContextException("Could not find bean of type: " + type.getCanonicalName());
-        }
-        return bean;
+        return get(descriptor(type), emptyResolutionPath());
     }
 
     public <T> T getOrNull(Class<T> type) {
         checkNonNull(type, "type");
-        return getOrNull(type, emptyResolutionPath());
-    }
-
-    <T> T getOrNull(Class<T> type, ResolutionPath path) {
-        List<CacheableBeanCreator<?>> creators = beanCreators.get(new BeanDescriptor(type));
-        if (creators == null || creators.isEmpty()) {
-            return null;
-        }
-        if (creators.size() > 1) {
-            throw new ContextException("Expected single bean of type: " + type + ". Got: " + creators.size());
-        }
-        BeanCreator<?> creator = creators.get(0);
-        try {
-            return createBean(creator, type, path.add(type));
-        } catch (Exception e) {
-            Throwable cause = simplifyException(e, path);
-            throw new ContextException("Could not create bean of type: " + type.getCanonicalName(), cause);
-        }
+        return getOrNull(descriptor(type), emptyResolutionPath());
     }
 
     public <T> T get(Class<T> type, String name) {
         checkNonNull(type, "type");
         checkNonNull(name, "name");
-        return get(type, name, emptyResolutionPath());
-    }
-
-    <T> T get(Class<T> type, String name, ResolutionPath path) {
-        T bean = getOrNull(type, name, path);
-        if (bean == null) {
-            throw new ContextException("Could not find bean with name: " + name);
-        }
-        return bean;
+        return get(descriptor(type, name), emptyResolutionPath());
     }
 
     public <T> T getOrNull(Class<T> type, String name) {
         checkNonNull(type, "type");
         checkNonNull(name, "name");
-        return getOrNull(type, name, emptyResolutionPath());
+        return getOrNull(descriptor(type, name), emptyResolutionPath());
     }
 
-    <T> T getOrNull(Class<T> type, String name, ResolutionPath path) {
-        List<CacheableBeanCreator<?>> creators = beanCreators.get(new BeanDescriptor(type, name));
-        if (creators == null || creators.isEmpty()) {
+    <T> T get(BeanDescriptor<T> descriptor, ResolutionPath path) {
+        T bean = getOrNull(descriptor, path);
+        if (bean == null) {
+            throw new ContextException("Could not find bean: " + descriptor.toShortString());
+        }
+        return bean;
+    }
+
+    <T> T getOrNull(BeanDescriptor<T> descriptor, ResolutionPath path) {
+        List<BeanHolder<?>> holders = beanHolders.get(descriptor);
+        if (holders == null || holders.isEmpty()) {
             return null;
         }
-        if (creators.size() > 1) {
-            throw new ContextException("Expected single bean of type: " + type + ". Got: " + creators.size());
+        if (holders.size() > 1) {
+            throw new ContextException("Expected single bean: " + descriptor.toShortString()
+                    + ". Got: " + holders.size());
         }
-        BeanCreator<?> creator = creators.get(0);
+        BeanHolder<?> holder = holders.get(0);
         try {
-            return createBean(creator, type, path.add(type, name));
+            return createBean(holder, descriptor, path.add(descriptor));
         } catch (Exception e) {
             Throwable cause = simplifyException(e, path);
-            throw new ContextException("Could not create bean for name: " + name, cause);
+            throw new ContextException("Could not create bean: " + descriptor.toShortString(), cause);
         }
     }
 
     public boolean contains(Class<?> type) {
         checkNonNull(type, "type");
-        return beanCreatorsByType.containsKey(type);
+        return beanHoldersByType.containsKey(type);
     }
 
     public boolean contains(String name) {
@@ -157,7 +138,7 @@ public final class Context implements Closeable {
     public boolean contains(Class<?> type, String name) {
         checkNonNull(type, "type");
         checkNonNull(name, "name");
-        return beanCreators.containsKey(new BeanDescriptor(type, name));
+        return beanHolders.containsKey(descriptor(type, name));
     }
 
     public <T> List<T> getAll(Class<T> type) {
@@ -179,43 +160,48 @@ public final class Context implements Closeable {
     }
 
     <T> List<T> getAllOrEmpty(Class<T> type, ResolutionPath path) {
-        List<CacheableBeanCreator<?>> creators = beanCreatorsByType.get(type);
+        BeanDescriptor<T> descriptor = descriptor(type);
+        List<BeanHolder<?>> creators = beanHoldersByType.get(type);
         if (creators == null || creators.isEmpty()) {
             return List.of();
         }
         try {
             return creators.stream()
-                    .map(creator -> createBean(creator, type, path.add(type)))
+                    .map(creator -> createBean(creator, descriptor, path.add(type)))
                     .collect(toList());
         } catch (Exception e) {
             Throwable cause = simplifyException(e, path);
-            throw new ContextException("Could not create beans for type: " + type.getCanonicalName(), cause);
+            throw new ContextException("Could not create beans: " + descriptor.toShortString(), cause);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T createBean(BeanCreator<?> creator, Class<T> type, ResolutionPath path) {
+    private <T> T createBean(BeanHolder<?> holder, BeanDescriptor<T> descriptor, ResolutionPath path) {
         if (closed) {
             throw new ContextException("Context already closed");
         }
         ResolutionContext resolutionContext = new ResolutionContext(this, path);
-        Object bean = creator.create(resolutionContext);
-        createdBeans.add(bean);
+        Object bean = holder.get(resolutionContext);
         initializeBean(bean, resolutionContext);
         return (T) bean;
     }
 
     @Override
     public void close() {
-        HashSet<Object> closedBeans = new HashSet<>();
-        while (closedBeans.size() < createdBeans.size()) {
+        Set<Object> closedBeans = new HashSet<>();
+        Set<Object> createdBeans;
+        do {
+            createdBeans = holders.stream()
+                    .filter(BeanHolder::isCached)
+                    .map(BeanHolder::getCached)
+                    .collect(toUnmodifiableSet());
             Set.copyOf(createdBeans).stream()
                     .filter(bean -> !closedBeans.contains(bean))
                     .forEach(bean -> {
                         closeBean(bean, emptyResolutionContext);
                         closedBeans.add(bean);
                     });
-        }
+        } while (closedBeans.size() < createdBeans.size());
         closed = true;
     }
 
