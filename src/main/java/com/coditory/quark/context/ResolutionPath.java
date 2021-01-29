@@ -2,9 +2,9 @@ package com.coditory.quark.context;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.coditory.quark.context.BeanDescriptor.descriptor;
 import static java.util.Objects.requireNonNull;
 
 final class ResolutionPath {
@@ -19,12 +19,12 @@ final class ResolutionPath {
     }
 
     static ResolutionPath with(Class<?> type, String name) {
-        return new ResolutionPath(List.of(new ResolutionElement(type, name)));
+        return new ResolutionPath(List.of(descriptor(type, name)));
     }
 
-    private final List<ResolutionElement> path;
+    private final List<BeanDescriptor<?>> path;
 
-    private ResolutionPath(List<ResolutionElement> path) {
+    private ResolutionPath(List<BeanDescriptor<?>> path) {
         requireNonNull(path);
         this.path = List.copyOf(path);
     }
@@ -34,7 +34,7 @@ final class ResolutionPath {
     }
 
     boolean contains(Class<?> type, String name) {
-        return path.contains(new ResolutionElement(type, name));
+        return path.contains(descriptor(type, name));
     }
 
     boolean contains(Class<?> type) {
@@ -50,54 +50,15 @@ final class ResolutionPath {
     }
 
     ResolutionPath add(Class<?> type, String name) {
-        ResolutionElement element = new ResolutionElement(type, name);
-        List<ResolutionElement> newPath = new ArrayList<>(path);
+        BeanDescriptor<?> element = descriptor(type, name);
+        List<BeanDescriptor<?>> newPath = new ArrayList<>(path);
         newPath.add(element);
         if (path.contains(element)) {
             String circle = newPath.stream()
-                    .map(ResolutionElement::toShortString)
+                    .map(BeanDescriptor::toShortString)
                     .collect(Collectors.joining(" -> "));
-            throw new ContextException("Detected circular dependency: " + circle);
+            throw new CyclicDependencyException("Detected cyclic dependency: " + circle);
         }
         return new ResolutionPath(newPath);
-    }
-
-    private static final class ResolutionElement {
-        private final Class<?> type;
-        private final String name;
-
-        ResolutionElement(Class<?> type, String name) {
-            this.type = requireNonNull(type);
-            this.name = name;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ResolutionElement that = (ResolutionElement) o;
-            return Objects.equals(type, that.type) && Objects.equals(name, that.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(type, name);
-        }
-
-        public String toShortString() {
-            String result = type.getSimpleName();
-            if (name != null) {
-                result += " (" + name + ")";
-            }
-            return result;
-        }
-
-        @Override
-        public String toString() {
-            return "ResolutionElement{" +
-                    "type=" + type +
-                    ", name='" + name + '\'' +
-                    '}';
-        }
     }
 }

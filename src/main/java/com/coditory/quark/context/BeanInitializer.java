@@ -11,32 +11,32 @@ final class BeanInitializer {
         throw new UnsupportedOperationException("Do not instantiate utility class");
     }
 
-    static void initializeBean(Object bean, ResolutionContext context) {
+    static void initializeBean(Object bean, BeanDescriptor<?> descriptor, ResolutionContext context) {
         if (bean instanceof Initializable) {
-            initializeBean((Initializable) bean);
+            initializeBean((Initializable) bean, descriptor);
         }
         for (Method method : bean.getClass().getDeclaredMethods()) {
             if (method.isAnnotationPresent(Init.class)) {
                 method.setAccessible(true);
-                initializeBean(bean, method, context);
+                initializeBean(bean, descriptor, method, context);
             }
         }
     }
 
-    private static void initializeBean(Object bean, Method method, ResolutionContext context) {
-        Object[] args = resolveArguments(method, context);
+    private static void initializeBean(Object bean, BeanDescriptor<?> descriptor, Method method, ResolutionContext context) {
         try {
+            Object[] args = resolveArguments(method, context);
             method.invoke(bean, args);
         } catch (Exception e) {
-            throw new ContextException("Could not initialize bean using method: " + method, e);
+            throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString() + " using method: " + method, e);
         }
     }
 
-    private static void initializeBean(Initializable bean) {
+    private static void initializeBean(Initializable bean, BeanDescriptor<?> descriptor) {
         try {
             bean.init();
         } catch (Exception e) {
-            throw new ContextException("Could not initialize bean: " + bean.getClass().getCanonicalName(), e);
+            throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString(), e);
         }
     }
 }

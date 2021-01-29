@@ -33,8 +33,8 @@ class BeanRegistrationSpec extends Specification {
 
         then:
             ContextException e = thrown(ContextException)
-            e.message == "Could not create bean: ${annotated.samples.beans_circular_deps.Bar.class.canonicalName}"
-            e.cause.message == "Detected circular dependency: Bar -> Baz -> Foo -> Bar"
+            e.message == "Could not create bean: Bar"
+            e.cause.message == "Detected cyclic dependency: Bar -> Baz -> Foo -> Bar"
     }
 
     def "should throw error when creating bean with a self dependency"() {
@@ -45,8 +45,8 @@ class BeanRegistrationSpec extends Specification {
 
         then:
             ContextException e = thrown(ContextException)
-            e.message == "Could not create bean: ${annotated.samples.beans_circular_deps.BarBar.class.canonicalName}"
-            e.cause.message == "Detected circular dependency: BarBar -> BarBar"
+            e.message == "Could not create bean: BarBar"
+            e.cause.message == "Detected cyclic dependency: BarBar -> BarBar"
     }
 
     def "should inject named beans"() {

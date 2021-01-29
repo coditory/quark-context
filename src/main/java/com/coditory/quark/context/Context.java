@@ -71,9 +71,9 @@ public final class Context implements Closeable {
     void init() {
         holders.stream()
                 .filter(BeanHolder::isCached)
-                .forEach(creator -> {
-                    Object bean = creator.get(emptyResolutionContext);
-                    initializeBean(bean, emptyResolutionContext);
+                .forEach(holder -> {
+                    Object bean = holder.get(emptyResolutionContext);
+                    initializeBean(bean, holder.getDescriptor(), emptyResolutionContext);
                 });
     }
 
@@ -149,7 +149,7 @@ public final class Context implements Closeable {
     <T> List<T> getAll(Class<T> type, ResolutionPath path) {
         List<T> beans = getAllOrEmpty(type, path);
         if (beans.isEmpty()) {
-            throw new ContextException("Beans not found for type: " + type.getCanonicalName());
+            throw new ContextException("Beans not found for type: " + type.getSimpleName());
         }
         return beans;
     }
@@ -182,23 +182,22 @@ public final class Context implements Closeable {
         }
         ResolutionContext resolutionContext = new ResolutionContext(this, path);
         Object bean = holder.get(resolutionContext);
-        initializeBean(bean, resolutionContext);
+        initializeBean(bean, descriptor, resolutionContext);
         return (T) bean;
     }
 
     @Override
     public void close() {
-        Set<Object> closedBeans = new HashSet<>();
-        Set<Object> createdBeans;
+        Set<BeanHolder<?>> closedBeans = new HashSet<>();
+        Set<BeanHolder<?>> createdBeans;
         do {
             createdBeans = holders.stream()
                     .filter(BeanHolder::isCached)
-                    .map(BeanHolder::getCached)
                     .collect(toUnmodifiableSet());
             Set.copyOf(createdBeans).stream()
                     .filter(bean -> !closedBeans.contains(bean))
                     .forEach(bean -> {
-                        closeBean(bean, emptyResolutionContext);
+                        closeBean(bean.getCached(), bean.getDescriptor(), emptyResolutionContext);
                         closedBeans.add(bean);
                     });
         } while (closedBeans.size() < createdBeans.size());
@@ -209,7 +208,7 @@ public final class Context implements Closeable {
         if (!path.isEmpty()) {
             return e;
         }
-        ContextException rootCause = Throwables.getRootCauseOfType(e, ContextException.class);
+        CyclicDependencyException rootCause = Throwables.getRootCauseOfType(e, CyclicDependencyException.class);
         return rootCause == null ? e : rootCause;
     }
 }
