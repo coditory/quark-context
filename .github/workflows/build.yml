@@ -58,9 +58,7 @@ jobs:
           if [ -n "$PREV_VERSION" ]; then
             declare -r ESC_PREV_VERSION="${PREV_VERSION//./\\.}"
             sed -i "s|^ *version *= *${ESC_PREV_VERSION} *$|version=${NEXT_VERSION}|" gradle.properties
-            sed -i "s|\"${ESC_PREV_VERSION}\"|\"${NEXT_VERSION}\"|" README.md
-            sed -i "s|'${ESC_PREV_VERSION}'|'${NEXT_VERSION}'|" README.md
-            sed -i "s|v${ESC_PREV_VERSION}|v${NEXT_VERSION}|" README.md
+            sed -i "s|${ESC_PREV_VERSION}|${NEXT_VERSION}|" README.md
             if [ -n "$(git status --porcelain)" ]; then
                git add -A
                git commit -a -m "Release v${NEXT_VERSION}" -m "[ci-skip]"

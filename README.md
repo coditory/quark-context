@@ -14,6 +14,7 @@ the [IoC Container provided by Spring Framework](https://docs.spring.io/spring-f
 - single purpose and is not part of a framework
 - provides both functional and annotation based API
 - has conditional bean registration mechanism
+- detects slow bean creation
 
 ## Installation
 
@@ -21,7 +22,7 @@ Add to your `build.gradle`:
 
 ```gradle
 dependencies {
-    compile 'com.coditory.quark:quark-context:0.1.1'
+    compile 'com.coditory.quark:quark-context:0.1.2'
 }
 ```
 
