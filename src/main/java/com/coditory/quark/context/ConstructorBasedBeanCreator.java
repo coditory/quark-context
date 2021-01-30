@@ -1,6 +1,5 @@
 package com.coditory.quark.context;
 
-import com.coditory.quark.context.annotations.ConditionalOnBean;
 import com.coditory.quark.context.annotations.Inject;
 
 import java.lang.reflect.Constructor;

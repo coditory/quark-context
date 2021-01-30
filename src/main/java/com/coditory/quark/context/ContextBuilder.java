@@ -2,12 +2,10 @@ package com.coditory.quark.context;
 
 import com.coditory.quark.context.annotations.Bean;
 import com.coditory.quark.context.annotations.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -22,6 +20,7 @@ import static com.coditory.quark.context.BeanHolder.holder;
 import static com.coditory.quark.context.ConstructorBasedBeanCreator.fromConstructor;
 
 public final class ContextBuilder {
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final Set<BeanHolder<?>> beanHolders = new LinkedHashSet<>();
     private final Map<String, Object> properties = new LinkedHashMap<>();
 

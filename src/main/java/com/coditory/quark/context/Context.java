@@ -7,7 +7,6 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,8 +14,6 @@ import java.util.stream.Collectors;
 
 import static com.coditory.quark.context.Args.checkNonNull;
 import static com.coditory.quark.context.BeanDescriptor.descriptor;
-import static com.coditory.quark.context.BeanFinalizer.closeBean;
-import static com.coditory.quark.context.BeanInitializer.initializeBean;
 import static com.coditory.quark.context.ResolutionPath.emptyResolutionPath;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;

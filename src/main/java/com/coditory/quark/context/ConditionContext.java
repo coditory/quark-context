@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.coditory.quark.context.BeanDescriptor.descriptor;
 import static java.util.Objects.requireNonNull;

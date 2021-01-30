@@ -20,15 +20,12 @@ final class BeanHolder<T> {
         return new BeanHolder<>(descriptor, creator, false);
     }
 
-    static <T> BeanHolder<T> eagerHolder(BeanDescriptor<T> descriptor, BeanCreator<T> creator) {
-        return new BeanHolder<>(descriptor, creator, true);
-    }
-
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final BeanCreator<T> creator;
     private final BeanDescriptor<T> descriptor;
     private final Set<Class<?>> classHierarchy;
     private T bean;
-    private boolean eager = false;
+    private boolean eager;
     private boolean initialized = false;
     private boolean closed = false;
 
@@ -98,14 +95,17 @@ final class BeanHolder<T> {
         if (bean == null) {
             throw new ContextException("Expected non-null bean: " + descriptor);
         }
+        log.debug("Created bean: {}", descriptor.toShortString());
         if (!initialized) {
             initializeBean(bean, descriptor, context);
+            initialized = true;
         }
     }
 
     void close(ResolutionContext context) {
-        if (!initialized) {
+        if (!closed) {
             closeBean(bean, descriptor, context);
+            closed = true;
         }
     }
 }

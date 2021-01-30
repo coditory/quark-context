@@ -1,5 +1,8 @@
 package com.coditory.quark.context;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +13,8 @@ import java.util.Set;
 import static java.util.stream.Collectors.toSet;
 
 final class ContextResolver {
+    private static final Logger log = LoggerFactory.getLogger(ContextResolver.class);
+
     private ContextResolver() {
         throw new UnsupportedOperationException("Do not instantiate utility class");
     }
@@ -78,7 +83,21 @@ final class ContextResolver {
             }
             remainingBeanHolders.removeAll(registeredBeans);
         } while (registered < registeredBeans.size());
+        logResolvedBeans(registeredBeans, additiveBeanHolders, remainingBeanHolders);
         return result;
+    }
+
+    private static void logResolvedBeans(Set<BeanHolder<?>> registered, Set<BeanHolder<?>> additiveBeanHolders, Set<BeanHolder<?>> remainingBeanHolders) {
+        registered.forEach(holder ->
+            log.info("Registered bean: {}", holder.getDescriptor().toShortString()));
+        if (log.isDebugEnabled()) {
+            Set<BeanHolder<?>> skipped = new HashSet<>();
+            skipped.addAll(additiveBeanHolders);
+            skipped.addAll(remainingBeanHolders);
+            skipped.forEach(holder ->
+                    log.debug("Skipped conditional bean: {}", holder.getDescriptor().toShortString()));
+        }
+
     }
 
     private static boolean canBeAddedToContext(BeanHolder<?> holder, Set<BeanHolder<?>> registeredBeans, ConditionContext context) {
