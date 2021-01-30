@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -98,14 +97,14 @@ public final class ContextBuilder {
         addBeanHolder(holder);
     }
 
-    public <T> ContextBuilder setProperty(String name, Object value) {
+    public ContextBuilder setProperty(String name, Object value) {
         checkNonNull(name, "name");
         checkNonNull(value, "value");
         properties.put(name, value);
         return this;
     }
 
-    public <T> ContextBuilder setProperties(Map<String, Object> properties) {
+    public ContextBuilder setProperties(Map<String, Object> properties) {
         checkNonNull(properties, "properties");
         this.properties.putAll(properties);
         return this;
@@ -146,7 +145,7 @@ public final class ContextBuilder {
     }
 
     private <T> BeanCreator<T> wrapBeanCreator(Predicate<ConditionContext> condition, BeanCreator<T> beanCreator) {
-        return new BeanCreator<T>() {
+        return new BeanCreator<>() {
             @Override
             public T create(ResolutionContext context) {
                 return beanCreator.create(context);

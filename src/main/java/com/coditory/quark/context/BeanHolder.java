@@ -24,8 +24,8 @@ final class BeanHolder<T> {
     private final BeanCreator<T> creator;
     private final BeanDescriptor<T> descriptor;
     private final Set<Class<?>> classHierarchy;
+    private final boolean eager;
     private T bean;
-    private boolean eager;
     private boolean initialized = false;
     private boolean closed = false;
 
