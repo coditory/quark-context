@@ -25,9 +25,7 @@ dependencies {
 }
 ```
 
-## Usage
-
-### Loading application context
+## Loading application context
 
 When using annotations you could load context with a single line:
 
@@ -35,6 +33,23 @@ When using annotations you could load context with a single line:
 public class Application {
     public static void main(String[] args) {
         Context context = Context.scanPackage(Application.class);
+        MyBean myBean = context.get(MyBean.class);
+        // ...
+    }
+}
+```
+
+For more complicated setups use context builder:
+
+```java
+public class Application {
+    public static void main(String[] args) {
+        Context context = Context.builder()
+                .add(new MyBean())
+                .add(MyBean2.class, () -> new MyBean2())
+                .add(MyBean3.class, (ctx) -> new MyBean3(context.getBean(MyBean.class)))
+                .scanPackage(Application.class)
+                .build();
         MyBean myBean = context.get(MyBean.class);
         // ...
     }
