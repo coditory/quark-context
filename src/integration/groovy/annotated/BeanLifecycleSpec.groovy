@@ -1,34 +1,34 @@
 package annotated
 
 import annotated.samples.beans_lifecycle.ConfigLifecycle
+import annotated.samples.beans_lifecycle.EagerBar
 import com.coditory.quark.context.Context
 import spock.lang.Specification
 
 class BeanLifecycleSpec extends Specification {
-    def "should register beans and initialize them"() {
-        given:
+    def "should lazy initialize beans"() {
+        when:
             Context context = Context.scanPackage(ConfigLifecycle)
+        then:
+            annotated.samples.beans_lifecycle.Bar.initialized == false
+            annotated.samples.beans_lifecycle.Baz.initialized == false
 
         when:
-            ConfigLifecycle config = context.get(ConfigLifecycle)
+            context.get(annotated.samples.beans_lifecycle.Bar)
         then:
-            config.initialized
-            config.initialized2
-        and:
-            !config.finalized
-            !config.finalized2
+            annotated.samples.beans_lifecycle.Bar.initialized
 
         when:
-            annotated.samples.beans_lifecycle.Bar bar = context.get(annotated.samples.beans_lifecycle.Bar)
+            context.get(annotated.samples.beans_lifecycle.Baz)
         then:
-            bar.initialized
-            !bar.finalized
+            annotated.samples.beans_lifecycle.Baz.initialized
+    }
 
+    def "should initialize eager bean right after context is built"() {
         when:
-            annotated.samples.beans_lifecycle.Baz baz = context.get(annotated.samples.beans_lifecycle.Baz)
+            Context.scanPackage(EagerBar)
         then:
-            baz.initialized
-            !baz.finalized
+            EagerBar.initialized == true
     }
 
     def "should finalize beans when closing the context"() {

@@ -36,16 +36,21 @@ public final class Context implements Closeable {
         return new ContextBuilder();
     }
 
+    static Context create(Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders, Map<String, Object> properties) {
+        Context context = new Context(holders, properties);
+        context.init();
+        return context;
+    }
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final Map<Class<?>, List<BeanHolder<?>>> beanHoldersByType;
     private final Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders;
     private final Set<BeanHolder<?>> holders;
     private final Set<String> beanNames;
     private final Map<String, Object> properties;
-    private final ResolutionContext emptyResolutionContext = new ResolutionContext(this, emptyResolutionPath());
     private boolean closed = false;
 
-    Context(Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders, Map<String, Object> properties) {
+    private Context(Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders, Map<String, Object> properties) {
         this.beanHolders = requireNonNull(beanHolders);
         this.properties = Map.copyOf(properties);
         this.beanHoldersByType = groupBeanCreatorsByType(beanHolders);
@@ -57,6 +62,13 @@ public final class Context implements Closeable {
                 .collect(toSet());
     }
 
+    private void init() {
+        ResolutionContext context = new ResolutionContext(this, emptyResolutionPath());
+        this.holders.stream()
+                .filter(BeanHolder::isEager)
+                .forEach(holder -> holder.get(context));
+    }
+
     private Map<Class<?>, List<BeanHolder<?>>> groupBeanCreatorsByType(Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanCreators) {
         Map<Class<?>, List<BeanHolder<?>>> beanCreatorsByType = new HashMap<>();
         beanCreators.forEach((key, value) -> {
@@ -66,15 +78,6 @@ public final class Context implements Closeable {
         return beanCreatorsByType.entrySet().stream()
                 .filter(e -> !e.getValue().isEmpty())
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> unmodifiableList(e.getValue())));
-    }
-
-    void init() {
-        holders.stream()
-                .filter(BeanHolder::isCached)
-                .forEach(holder -> {
-                    Object bean = holder.get(emptyResolutionContext);
-                    initializeBean(bean, holder.getDescriptor(), emptyResolutionContext);
-                });
     }
 
     public <T> T get(Class<T> type) {
@@ -182,25 +185,23 @@ public final class Context implements Closeable {
         }
         ResolutionContext resolutionContext = new ResolutionContext(this, path);
         Object bean = holder.get(resolutionContext);
-        initializeBean(bean, descriptor, resolutionContext);
         return (T) bean;
     }
 
     @Override
     public void close() {
-        Set<BeanHolder<?>> closedBeans = new HashSet<>();
-        Set<BeanHolder<?>> createdBeans;
+        ResolutionContext emptyResolutionContext = new ResolutionContext(this, emptyResolutionPath());
+        Set<BeanHolder<?>> closedBeanHolders;
+        long createdBeans;
         do {
+            closedBeanHolders = holders.stream()
+                    .filter(BeanHolder::isCached)
+                    .collect(toSet());
+            closedBeanHolders.forEach(b -> b.close(emptyResolutionContext));
             createdBeans = holders.stream()
                     .filter(BeanHolder::isCached)
-                    .collect(toUnmodifiableSet());
-            Set.copyOf(createdBeans).stream()
-                    .filter(bean -> !closedBeans.contains(bean))
-                    .forEach(bean -> {
-                        closeBean(bean.getCached(), bean.getDescriptor(), emptyResolutionContext);
-                        closedBeans.add(bean);
-                    });
-        } while (closedBeans.size() < createdBeans.size());
+                    .count();
+        } while (closedBeanHolders.size() < createdBeans);
         closed = true;
     }
 

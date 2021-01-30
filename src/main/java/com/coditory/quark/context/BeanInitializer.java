@@ -1,12 +1,17 @@
 package com.coditory.quark.context;
 
 import com.coditory.quark.context.annotations.Init;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 
 import static com.coditory.quark.context.DependencyResolver.resolveArguments;
+import static com.coditory.quark.context.MethodBasedBeanCreator.simplifyMethodName;
 
 final class BeanInitializer {
+    private static final Logger log = LoggerFactory.getLogger(BeanInitializer.class);
+
     private BeanInitializer() {
         throw new UnsupportedOperationException("Do not instantiate utility class");
     }
@@ -27,14 +32,16 @@ final class BeanInitializer {
         try {
             Object[] args = resolveArguments(method, context);
             method.invoke(bean, args);
+            log.debug("Initialized bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method));
         } catch (Exception e) {
-            throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString() + " using method: " + method, e);
+            throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
         }
     }
 
     private static void initializeBean(Initializable bean, BeanDescriptor<?> descriptor) {
         try {
             bean.init();
+            log.debug("Initialized bean: " + descriptor.toShortString());
         } catch (Exception e) {
             throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString(), e);
         }

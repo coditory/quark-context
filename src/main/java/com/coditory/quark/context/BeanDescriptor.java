@@ -18,7 +18,7 @@ final class BeanDescriptor<T> {
 
     private BeanDescriptor(Class<T> type, String name) {
         this.type = requireNonNull(type);
-        this.name = name;
+        this.name = name == null || name.isBlank() ? null : name;
     }
 
     <R> BeanDescriptor<R> withType(Class<R> type) {

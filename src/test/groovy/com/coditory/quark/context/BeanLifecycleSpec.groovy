@@ -44,7 +44,7 @@ class BeanLifecycleSpec extends Specification {
             lifecycleImplemented.finalized
     }
 
-    def "should not initialize nor finalize beans that were not retrieved from the context"() {
+    def "should initialize eager beans after context is built"() {
         given:
             LifecycleAnnotated lifecycleAnnotated = new LifecycleAnnotated()
             LifecycleImplemented lifecycleImplemented = new LifecycleImplemented()
@@ -56,11 +56,24 @@ class BeanLifecycleSpec extends Specification {
         when:
             context.close()
         then:
-            !lifecycleAnnotated.initialized
-            !lifecycleAnnotated.finalized
+            lifecycleAnnotated.initialized
+            lifecycleImplemented.initialized
+    }
+
+    def "should not initialize lazy beans that were not retrieved from the context"() {
+        given:
+            LifecycleAnnotated lifecycleAnnotated = new LifecycleAnnotated()
+            LifecycleImplemented lifecycleImplemented = new LifecycleImplemented()
         and:
+            Context context = Context.builder()
+                    .add(() -> lifecycleAnnotated)
+                    .add(() -> lifecycleImplemented)
+                    .build()
+        when:
+            context.close()
+        then:
+            !lifecycleAnnotated.initialized
             !lifecycleImplemented.initialized
-            !lifecycleImplemented.finalized
     }
 
     def "should inject dependencies to lifecycle annotated methods"() {
@@ -83,16 +96,13 @@ class BeanLifecycleSpec extends Specification {
     }
 
     def "should throw error when dependency for @Init annotated method is missing"() {
-        given:
-            Context context = Context.builder()
+        when:
+            Context.builder()
                     .add(new LifecycleAnnotatedWithDeps())
                     .build()
-        when:
-            context.get(LifecycleAnnotatedWithDeps)
         then:
-            ContextException e = thrown(ContextException)
-            e.message == "Could not create bean: LifecycleAnnotatedWithDeps"
-            e.cause.message.startsWith("Could not initialize bean: LifecycleAnnotatedWithDeps")
+            BeanInitializationException e = thrown(BeanInitializationException)
+            e.message.startsWith("Could not initialize bean: LifecycleAnnotatedWithDeps")
     }
 
     def "should throw error when dependency for @Close annotated method is missing"() {

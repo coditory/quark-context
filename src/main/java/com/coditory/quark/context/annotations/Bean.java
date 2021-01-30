@@ -10,4 +10,5 @@ import java.lang.annotation.Target;
 public @interface Bean {
     String value() default "";
     String name() default "";
+    boolean eager() default false;
 }

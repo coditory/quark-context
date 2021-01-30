@@ -4,8 +4,8 @@ import com.coditory.quark.context.annotations.Close
 import com.coditory.quark.context.annotations.Init
 
 class Baz {
-    boolean initialized = false
-    boolean finalized = false
+    static boolean initialized = false
+    static boolean finalized = false
     final Bar bar
 
     Baz(Bar bar) {
@@ -14,11 +14,11 @@ class Baz {
 
     @Init
     void init() {
-        initialized = true
+        Baz.initialized = true
     }
 
     @Close
     void close() {
-        finalized = true
+        Baz.finalized = true
     }
 }

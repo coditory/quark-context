@@ -2,20 +2,20 @@ package annotated.samples.beans_lifecycle
 
 import com.coditory.quark.context.annotations.Bean
 import com.coditory.quark.context.annotations.Close
-import com.coditory.quark.context.annotations.Init
+import com.coditory.quark.context.annotations.Init;
 
-@Bean
-class Bar {
+@Bean(eager = true)
+class EagerBar {
     static boolean initialized = false
     static boolean finalized = false
 
     @Init
     void init() {
-        Bar.initialized = true
+        EagerBar.initialized = true
     }
 
     @Close
     void close() {
-        Bar.finalized = true
+        EagerBar.finalized = true
     }
 }
