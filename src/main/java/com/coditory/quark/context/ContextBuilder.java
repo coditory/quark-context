@@ -4,6 +4,7 @@ import com.coditory.quark.context.annotations.Bean;
 import com.coditory.quark.context.annotations.Configuration;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -130,15 +131,42 @@ public final class ContextBuilder {
         return this;
     }
 
-    public <T> ContextBuilder add(Class<T> type, BeanCreator<T> beanCreator) {
+    public <T> ContextBuilder add(Class<T> type, Predicate<ConditionContext> condition, BeanCreator<T> beanCreator) {
+        checkNonNull(condition, "condition");
         checkNonNull(type, "type");
+        checkNonNull(beanCreator, "beanCreator");
+        return add(type, wrapBeanCreator(condition, beanCreator));
+    }
+
+    public <T> ContextBuilder add(Class<T> type, String name, Predicate<ConditionContext> condition, BeanCreator<T> beanCreator) {
+        checkNonNull(condition, "condition");
+        checkNonNull(type, "type");
+        checkNonNull(name, "name");
+        checkNonNull(beanCreator, "beanCreator");
+        return add(type, name, wrapBeanCreator(condition, beanCreator));
+    }
+
+    private <T> BeanCreator<T> wrapBeanCreator(Predicate<ConditionContext> condition, BeanCreator<T> beanCreator) {
+        return new BeanCreator<T>() {
+            @Override
+            public T create(ResolutionContext context) {
+                return beanCreator.create(context);
+            }
+
+            @Override
+            public boolean isActive(ConditionContext context) {
+                return beanCreator.isActive(context) && condition.test(context);
+            }
+        };
+    }
+
+    public <T> ContextBuilder add(Class<T> type, BeanCreator<T> beanCreator) {
         checkNonNull(beanCreator, "beanCreator");
         addBeanHolder(holder(descriptor(type), beanCreator));
         return this;
     }
 
     public <T> ContextBuilder add(Class<T> type, String name, BeanCreator<T> beanCreator) {
-        checkNonNull(type, "type");
         checkNonNull(name, "name");
         checkNonNull(beanCreator, "beanCreator");
         addBeanHolder(holder(descriptor(type, name), beanCreator));
