@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 final class ContextResolver {
@@ -88,16 +89,23 @@ final class ContextResolver {
     }
 
     private static void logResolvedBeans(Set<BeanHolder<?>> registered, Set<BeanHolder<?>> additiveBeanHolders, Set<BeanHolder<?>> remainingBeanHolders) {
-        registered.forEach(holder ->
-            log.info("Registered bean: {}", holder.getDescriptor().toShortString()));
-        if (log.isDebugEnabled()) {
-            Set<BeanHolder<?>> skipped = new HashSet<>();
-            skipped.addAll(additiveBeanHolders);
-            skipped.addAll(remainingBeanHolders);
-            skipped.forEach(holder ->
-                    log.debug("Skipped conditional bean: {}", holder.getDescriptor().toShortString()));
+        if (log.isInfoEnabled()) {
+            List<String> names = registered.stream()
+                    .map(h -> h.getDescriptor().toShortString())
+                    .sorted()
+                    .collect(toList());
+            log.info("Registered beans: {}", names);
         }
-
+        Set<BeanHolder<?>> skipped = new HashSet<>();
+        skipped.addAll(additiveBeanHolders);
+        skipped.addAll(remainingBeanHolders);
+        if (log.isDebugEnabled() && !skipped.isEmpty()) {
+            List<String> names = skipped.stream()
+                    .map(h -> h.getDescriptor().toShortString())
+                    .sorted()
+                    .collect(toList());
+            log.debug("Skipped beans: {}", names);
+        }
     }
 
     private static boolean canBeAddedToContext(BeanHolder<?> holder, Set<BeanHolder<?>> registeredBeans, ConditionContext context) {

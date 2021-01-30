@@ -79,7 +79,12 @@ final class BeanHolder<T> {
     }
 
     boolean isActive(ConditionContext context) {
-        return creator.isActive(context);
+        Timer timer = Timer.start();
+        boolean result = creator.isActive(context);
+        if (timer.isOverThreshold()) {
+            log.warn("Detected long bean condition check. Bean: {}, Time: {}", descriptor.toShortString(), timer.measureAndFormat());
+        }
+        return result;
     }
 
     @Nullable
@@ -91,11 +96,15 @@ final class BeanHolder<T> {
     }
 
     private void createBean(ResolutionContext context) {
+        Timer timer = Timer.start();
         bean = creator.create(context);
         if (bean == null) {
             throw new ContextException("Expected non-null bean: " + descriptor);
         }
-        log.debug("Created bean: {}", descriptor.toShortString());
+        log.debug("Created bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
+        if (timer.isOverThreshold()) {
+            log.warn("Detected long bean creation. Bean: {}, Time: {}", descriptor.toShortString(), timer.measureAndFormat());
+        }
         if (!initialized) {
             initializeBean(bean, descriptor, context);
             initialized = true;

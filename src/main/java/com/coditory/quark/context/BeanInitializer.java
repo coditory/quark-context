@@ -29,21 +29,29 @@ final class BeanInitializer {
     }
 
     private static void initializeBean(Object bean, BeanDescriptor<?> descriptor, Method method, ResolutionContext context) {
+        Timer timer = Timer.start();
         try {
             Object[] args = resolveArguments(method, context);
             method.invoke(bean, args);
-            log.debug("Initialized bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method));
         } catch (Exception e) {
             throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
+        }
+        log.debug("Initialized bean {} using method {} in {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
+        if (timer.isOverThreshold()) {
+            log.warn("Detected long bean initialization. Bean: {}, Method: {}, Time: {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
         }
     }
 
     private static void initializeBean(Initializable bean, BeanDescriptor<?> descriptor) {
+        Timer timer = Timer.start();
         try {
             bean.init();
-            log.debug("Initialized bean: " + descriptor.toShortString());
         } catch (Exception e) {
             throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString(), e);
+        }
+        log.debug("Initialized bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
+        if (timer.isOverThreshold()) {
+            log.warn("Detected long bean initialization. Bean: {}, Time: {}", descriptor.toShortString(), timer.measureAndFormat());
         }
     }
 }

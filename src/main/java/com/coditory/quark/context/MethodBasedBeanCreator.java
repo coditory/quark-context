@@ -12,7 +12,7 @@ final class MethodBasedBeanCreator<T> implements BeanCreator<T> {
         String params = Arrays.stream(method.getParameterTypes())
                 .map(Class::getSimpleName)
                 .collect(Collectors.joining(", "));
-        return method.getReturnType().getSimpleName() + " " + method.getName() + "(" + params + ")";
+        return method.getName() + "(" + params + ")";
     }
 
     private final Method method;

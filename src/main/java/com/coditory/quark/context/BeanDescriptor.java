@@ -43,7 +43,7 @@ final class BeanDescriptor<T> {
 
     String toShortString() {
         return name != null
-                ? type.getSimpleName() + "(name: " + name + ")"
+                ? type.getSimpleName() + ":" + name
                 : type.getSimpleName();
     }
 

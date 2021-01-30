@@ -177,23 +177,10 @@ public final class ContextBuilder {
     }
 
     public Context buildEager() {
-        Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = resolveConditionalBeans();
-        Context context = Context.create(holders, properties);
-        holders.forEach((descriptor, creator) -> {
-            if (descriptor.getName() != null) {
-                context.get(descriptor.getType(), descriptor.getName());
-            } else {
-                context.get(descriptor.getType());
-            }
-        });
-        return context;
+        return Context.createEager(beanHolders, properties);
     }
 
     public Context build() {
-        return Context.create(resolveConditionalBeans(), properties);
-    }
-
-    private Map<BeanDescriptor<?>, List<BeanHolder<?>>> resolveConditionalBeans() {
-        return ContextResolver.resolve(beanHolders, properties);
+        return Context.create(beanHolders, properties);
     }
 }

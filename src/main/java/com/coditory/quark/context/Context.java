@@ -33,13 +33,32 @@ public final class Context implements Closeable {
         return new ContextBuilder();
     }
 
-    static Context create(Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders, Map<String, Object> properties) {
+    static Context create(Set<BeanHolder<?>> beanHolders, Map<String, Object> properties) {
+        Timer totalTimer = Timer.start();
+        Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
         Context context = new Context(holders, properties);
         context.init();
+        log.info("Created context in {}", totalTimer.measureAndFormat());
         return context;
     }
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    static Context createEager(Set<BeanHolder<?>> beanHolders, Map<String, Object> properties) {
+        Timer totalTimer = Timer.start();
+        Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
+        Context context = new Context(holders, properties);
+        context.init();
+        holders.forEach((descriptor, creator) -> {
+            if (descriptor.getName() != null) {
+                context.get(descriptor.getType(), descriptor.getName());
+            } else {
+                context.get(descriptor.getType());
+            }
+        });
+        log.info("Created eager context in {}", totalTimer.measureAndFormat());
+        return context;
+    }
+
+    private static final Logger log = LoggerFactory.getLogger(Context.class);
     private final Map<Class<?>, List<BeanHolder<?>>> beanHoldersByType;
     private final Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders;
     private final Set<BeanHolder<?>> holders;
