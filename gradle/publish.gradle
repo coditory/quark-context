@@ -54,7 +54,7 @@ publishing {
             pom {
                 name = archivesBaseName
                 description = project.description
-                url = 'https://github.com/coditory/quark-config'
+                url = 'https://github.com/coditory/quark-context'
                 organization {
                     name = "Coditory"
                     url = "https://coditory.com"
@@ -73,13 +73,13 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git@github.com:coditory/quark-config.git'
-                    developerConnection = 'scm:git@github.com:coditory/quark-config.git'
-                    url = 'https://github.com/coditory/quark-config'
+                    connection = 'scm:git@github.com:coditory/quark-context.git'
+                    developerConnection = 'scm:git@github.com:coditory/quark-context.git'
+                    url = 'https://github.com/coditory/quark-context'
                 }
                 issueManagement {
                     system = "GitHub"
-                    url = "https://github.com/coditory/quark-config/issues"
+                    url = "https://github.com/coditory/quark-context/issues"
                 }
             }
         }
