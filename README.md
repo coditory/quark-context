@@ -11,7 +11,7 @@ the [IoC Container provided by Spring Framework](https://docs.spring.io/spring-f
 , that is:
 
 - lightweight, no dependencies
-- has single purpose and is not part of a framework
+- single purpose and is not part of a framework
 - provides both functional and annotation based API
 - has conditional bean registration mechanism
 
