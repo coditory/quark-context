@@ -4,4 +4,6 @@ import com.coditory.quark.context.annotations.Bean
 
 @Bean
 class Foo {
+    private Bar() {
+    }
 }

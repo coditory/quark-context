@@ -3,10 +3,9 @@ plugins {
     id 'groovy'
     id 'jacoco'
     id 'signing'
-    id 'com.github.kt3k.coveralls' version '2.10.2'
-    id 'com.coditory.build' version '0.1.11'
-    id 'io.codearte.nexus-staging' version '0.22.0' apply false
-    id 'de.marcphilipp.nexus-publish' version '0.4.0' apply false
+    id 'com.github.kt3k.coveralls' version '2.12.0'
+    id 'com.coditory.build' version '0.1.12'
+    id 'io.github.gradle-nexus.publish-plugin' version '1.1.0' apply false
 }
 
 group = 'com.coditory.quark'
@@ -14,10 +13,10 @@ description = 'Coditory Quark Configuration Library'
 
 dependencies {
     api 'org.slf4j:slf4j-api:1.7.30'
-    api 'org.jetbrains:annotations:16.0.1'
-    testImplementation 'com.coditory.quark:quark-config:0.1.0'
+    api 'org.jetbrains:annotations:16.0.2'
+    testImplementation 'com.coditory.quark:quark-config:0.1.2'
     testImplementation 'ch.qos.logback:logback-classic:1.2.3'
-    testImplementation 'org.spockframework:spock-core:2.0-M4-groovy-3.0'
+    testImplementation 'org.spockframework:spock-core:2.0-M5-groovy-3.0'
     testImplementation 'org.skyscreamer:jsonassert:1.5.0'
 }
 

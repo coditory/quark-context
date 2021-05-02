@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.toList;
 final class ConstructorBasedBeanCreator<T> implements BeanCreator<T> {
     @SuppressWarnings("unchecked")
     static <T> ConstructorBasedBeanCreator<T> fromConstructor(Class<T> type) {
-        Constructor<?>[] constructors = type.getConstructors();
+        Constructor<?>[] constructors = type.getDeclaredConstructors();
         Constructor<T> constructor;
         if (constructors.length == 1) {
             constructor = (Constructor<T>) constructors[0];
