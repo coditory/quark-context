@@ -72,6 +72,20 @@ jobs:
           echo ::set-output name=next_version::$NEXT_VERSION
           echo -e "VERSION: $VERSION\nNEXT_VERSION: $NEXT_VERSION"
 
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v5
+        if: |
+          github.event_name != 'release'
+          && github.ref == 'refs/heads/master'
+          && inputs.publish != 'SNAPSHOT'
+        with:
+          gpg_private_key: ${{ secrets.GPG_KEY_SECRET2 }}
+          passphrase: ${{ secrets.GPG_PASSWORD }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_committer_name: Coditory Bot
+          git_committer_email: bot@coditory.com
+
       - name: Update version in README (master only)
         if: |
           github.event_name != 'release'
@@ -81,8 +95,6 @@ jobs:
           PREV_VERSION: ${{ steps.versions.outputs.version }}
           NEXT_VERSION: ${{ steps.versions.outputs.next_version }}
         run: |
-          git config user.name "Coditory CI"
-          git config user.email "Coditory CI <admin@coditory.com>"
           declare -r ESC_PREV_VERSION="${PREV_VERSION//./\\.}"
           echo "Changing: $PREV_VERSION -> $NEXT_VERSION"
           sed -i "s|${ESC_PREV_VERSION}|${NEXT_VERSION}|" README.md
@@ -110,8 +122,8 @@ jobs:
           || (inputs.publish == 'AUTO' && github.ref == 'refs/heads/master')
         env:
           NEXT_VERSION: ${{ steps.versions.outputs.next_version }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY2 }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD2 }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
