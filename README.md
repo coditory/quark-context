@@ -1,7 +1,6 @@
 # Quark Context
-
-[![Build Status](https://github.com/coditory/quark-context/workflows/Build/badge.svg?branch=master)](https://github.com/coditory/quark-context/actions?query=workflow%3ABuild+branch%3Amaster)
-[![Coverage Status](https://coveralls.io/repos/github/coditory/quark-context/badge.svg?branch=master)](https://coveralls.io/github/coditory/quark-context?branch=master)
+[![Build](https://github.com/coditory/quark-context/actions/workflows/build.yml/badge.svg)](https://github.com/coditory/quark-context/actions/workflows/build.yml)
+[![Coverage Status](https://coveralls.io/repos/github/coditory/quark-context/badge.svg)](https://coveralls.io/github/coditory/quark-context)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coditory.quark/quark-context/badge.svg)](https://mvnrepository.com/artifact/com.coditory.quark/quark-context)
 
 > Quark Context is a lightweight and single purpose java library for loading and manipulating configurations
