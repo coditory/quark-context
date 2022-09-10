@@ -21,7 +21,7 @@ Add to your `build.gradle`:
 
 ```gradle
 dependencies {
-    implementation "com.coditory.quark:quark-context:0.1.3"
+    implementation "com.coditory.quark:quark-context:0.1.4"
 }
 ```
 
