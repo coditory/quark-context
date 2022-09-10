@@ -51,7 +51,7 @@ jobs:
           NEXT_INPUT_VERSION: ${{ inputs.version }}
           TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
-          declare -r GIT_VERSION="$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | tail -n 1 | cut -c2-)"
+          declare -r GIT_VERSION="$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -n 1 | cut -c2-)"
           declare -r VERSION=${GIT_VERSION:-0.0.0}
           declare -r MAJOR="$(echo "$VERSION" | cut -d. -f1)"
           declare -r MINOR="$(echo "$VERSION" | cut -d. -f2)"
