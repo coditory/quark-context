@@ -99,7 +99,7 @@ jobs:
           sed -i "s|${ESC_PREV_VERSION}|${NEXT_VERSION}|" README.md
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
-            git commit -a -m "Update version in README.md"
+            git commit -a -m "Update version in README.md" -m "[ci skip]"
             git push origin master
           else
             echo "Nothing changed. Skipping commit."
@@ -179,4 +179,3 @@ jobs:
           declare -r MIDDLE="$([ "$GITHUB_REF" == "refs/heads/master" ] && echo "" || echo "-${GITHUB_REF#refs/heads/}")"
           ./gradlew publishToSonatype -Pversion="${NEXT_VERSION}${MIDDLE}-SNAPSHOT" -Ppublish
           echo "Published snapshot: ${NEXT_VERSION}${MIDDLE}-SNAPSHOT"
-
