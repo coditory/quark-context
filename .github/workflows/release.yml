@@ -21,17 +21,10 @@ on:
         default: AUTO
   release:
     types: [ published ]
-  workflow_run:
-    workflows: [ Build ]
-    types: [ completed ]
-    branches: [ master ]
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name != 'workflow_run'
-      || (github.event.workflow_run.conclusion == 'success' && contains(github.event.workflow_run.head_commit.message, '[ci release]'))
     steps:
       - name: Validate build succeeded
         env:
@@ -116,7 +109,6 @@ jobs:
       - name: Publish release
         if: |
           github.event_name == 'release'
-          || github.event_name == 'workflow_run'
           || inputs.publish == 'RELEASE'
           || (inputs.publish == 'AUTO' && github.ref == 'refs/heads/master')
         env:
