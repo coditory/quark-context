@@ -74,6 +74,7 @@ jobs:
           echo -e "VERSION: $VERSION\nNEXT_VERSION: $NEXT_VERSION"
 
       - name: Import GPG key
+        id: gpg
         uses: crazy-max/ghaction-import-gpg@v5
         if: |
           github.event_name != 'release'
@@ -88,10 +89,7 @@ jobs:
           git_committer_email: bot@coditory.com
 
       - name: Update version in README (master only)
-        if: |
-          github.event_name != 'release'
-          && github.ref == 'refs/heads/master'
-          && inputs.publish != 'SNAPSHOT'
+        if: steps.gpg.conclusion == 'success'
         env:
           PREV_VERSION: ${{ steps.versions.outputs.version }}
           NEXT_VERSION: ${{ steps.versions.outputs.next_version }}
@@ -154,10 +152,7 @@ jobs:
           echo ::set-output name=notes::$ESCAPED
 
       - name: Create github release (master only)
-        if: |
-          github.event_name != 'release'
-          && github.ref == 'refs/heads/master'
-          && inputs.publish != 'SNAPSHOT'
+        if: steps.notes.conclusion == 'success'
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
