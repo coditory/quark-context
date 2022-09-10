@@ -80,8 +80,8 @@ jobs:
           && github.ref == 'refs/heads/master'
           && inputs.publish != 'SNAPSHOT'
         with:
-          gpg_private_key: ${{ secrets.GPG_KEY_SECRET2 }}
-          passphrase: ${{ secrets.GPG_PASSWORD2 }}
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
           git_user_signingkey: true
           git_commit_gpgsign: true
           git_committer_name: Coditory Bot
@@ -123,8 +123,8 @@ jobs:
           || (inputs.publish == 'AUTO' && github.ref == 'refs/heads/master')
         env:
           NEXT_VERSION: ${{ steps.versions.outputs.next_version }}
-          SIGNING_KEY: ${{ secrets.GPG_KEY_SECRET2 }}
-          SIGNING_PASSWORD: ${{ secrets.GPG_PASSWORD2 }}
+          SIGNING_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.GPG_PASSPHRASE }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
@@ -176,8 +176,8 @@ jobs:
           )
         env:
           NEXT_VERSION: ${{ steps.versions.outputs.next_version }}
-          SIGNING_KEY: ${{ secrets.GPG_KEY_SECRET2 }}
-          SIGNING_PASSWORD: ${{ secrets.GPG_PASSWORD2 }}
+          SIGNING_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.GPG_PASSPHRASE }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
