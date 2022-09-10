@@ -123,8 +123,8 @@ jobs:
           || (inputs.publish == 'AUTO' && github.ref == 'refs/heads/master')
         env:
           NEXT_VERSION: ${{ steps.versions.outputs.next_version }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY2 }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD2 }}
+          SIGNING_KEY: ${{ secrets.GPG_KEY_SECRET2 }}
+          SIGNING_PASSWORD: ${{ secrets.GPG_PASSWORD2 }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
@@ -176,8 +176,8 @@ jobs:
           )
         env:
           NEXT_VERSION: ${{ steps.versions.outputs.next_version }}
-          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.GPG_KEY_SECRET2 }}
+          SIGNING_PASSWORD: ${{ secrets.GPG_PASSWORD2 }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
