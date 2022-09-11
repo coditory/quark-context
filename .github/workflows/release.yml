@@ -92,7 +92,7 @@ jobs:
           sed -i "s|${ESC_PREV_VERSION}|${NEXT_VERSION}|" README.md
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
-            git commit -a -m "Update version in README.md" -m "[ci skip]"
+            git commit -a -m "Update version $PREV_VERSION -> $NEXT_VERSION" -m "[ci skip]"
             git push origin master
           else
             echo "Nothing changed. Skipping commit."
