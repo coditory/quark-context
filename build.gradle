@@ -12,7 +12,7 @@ group = 'com.coditory.quark'
 description = 'Coditory Quark Configuration Library'
 
 dependencies {
-    api 'org.slf4j:slf4j-api:2.0.0'
+    api 'org.slf4j:slf4j-api:2.0.3'
     api 'org.jetbrains:annotations:23.0.0'
     testImplementation 'com.coditory.quark:quark-config:0.1.5'
     testImplementation 'ch.qos.logback:logback-classic:1.4.0'
