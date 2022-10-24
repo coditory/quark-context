@@ -4,14 +4,28 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-final class Args {
-    private Args() {
+final class Preconditions {
+    private Preconditions() {
         throw new UnsupportedOperationException("Do not instantiate utility class");
     }
 
-    public static <T> T checkNonNull(@Nullable T value, String name) {
+    public static void expect(boolean check, String message) {
+        if (!check) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    public static <T> T expectNonNull(@Nullable T value, String name) {
         if (value == null) {
             String message = message("Expected non-null value", name, null);
+            throw new IllegalArgumentException(message);
+        }
+        return value;
+    }
+
+    public static String expectNonBlank(@Nullable String value, String name) {
+        if (value == null || value.isBlank()) {
+            String message = message("Expected non-null and non-blank value", name, null);
             throw new IllegalArgumentException(message);
         }
         return value;

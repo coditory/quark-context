@@ -4,20 +4,26 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 final class Timer {
-    private static final Duration DEFAULT_THRESHOLD = Duration.ofMillis(50);
-
     public static Timer start() {
         return new Timer();
     }
 
-    private final long startMs = System.currentTimeMillis();
+    private long elapsedMs = 0;
+    private long startMs = now();
 
-    boolean isOverThreshold() {
-        return DEFAULT_THRESHOLD.minus(measure()).isNegative();
+    void pause() {
+        elapsedMs += delta();
+        startMs = 0;
+    }
+
+    void resume() {
+        if (startMs == 0) {
+            startMs = System.currentTimeMillis();
+        }
     }
 
     Duration measure() {
-        long millis = now() - startMs;
+        long millis = elapsedMs + delta();
         return Duration.ofMillis(millis);
     }
 
@@ -42,6 +48,10 @@ final class Timer {
             result = String.format("%dms", ms);
         }
         return result;
+    }
+
+    private long delta() {
+        return startMs == 0 ? 0 : (now() - startMs);
     }
 
     private long now() {
