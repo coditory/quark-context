@@ -38,9 +38,6 @@ final class BeanFinalizer {
             throw new BeanFinalizationException("Could not close bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
         }
         log.debug("Closed bean {} using method {} in {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
-        if (timer.isOverThreshold()) {
-            log.warn("Detected long bean close operation. Bean: {}, Method: {}, Time: {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
-        }
     }
 
     private static void closeBean(Closeable bean, BeanDescriptor<?> descriptor) {
@@ -51,8 +48,5 @@ final class BeanFinalizer {
             throw new BeanFinalizationException("Could not close bean: " + descriptor.toShortString(), e);
         }
         log.debug("Closed bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
-        if (timer.isOverThreshold()) {
-            log.warn("Detected long bean close operation. Bean: {}, Time: {}", descriptor.toShortString(), timer.measureAndFormat());
-        }
     }
 }

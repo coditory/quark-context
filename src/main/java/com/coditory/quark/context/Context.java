@@ -1,5 +1,7 @@
 package com.coditory.quark.context;
 
+import com.coditory.quark.context.events.ContextEvent;
+import com.coditory.quark.eventbus.EventBus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,23 +9,23 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.coditory.quark.context.Args.checkNonNull;
 import static com.coditory.quark.context.BeanDescriptor.descriptor;
+import static com.coditory.quark.context.Preconditions.expectNonNull;
 import static com.coditory.quark.context.ResolutionPath.emptyResolutionPath;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
-import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public final class Context implements Closeable {
     public static Context scanPackage(Class<?> type) {
-        checkNonNull(type, "type");
+        expectNonNull(type, "type");
         return builder()
                 .scanPackage(type)
                 .build();
@@ -33,49 +35,65 @@ public final class Context implements Closeable {
         return new ContextBuilder();
     }
 
-    static Context create(Set<BeanHolder<?>> beanHolders, Map<String, Object> properties) {
+    static Context create(String name, Set<BeanHolder<?>> beanHolders, Map<String, Object> properties, EventBus eventBus) {
+        eventBus.emit(new ContextEvent.ContextPreCreateEvent());
         Timer totalTimer = Timer.start();
         Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
-        Context context = new Context(holders, properties);
+        Context context = new Context(name, holders, properties, eventBus);
         context.init();
         log.info("Created context in {}", totalTimer.measureAndFormat());
+        eventBus.emit(new ContextEvent.ContextPostCreateEvent());
         return context;
     }
 
-    static Context createEager(Set<BeanHolder<?>> beanHolders, Map<String, Object> properties) {
+    static Context createEager(String name, Set<BeanHolder<?>> beanHolders, Map<String, Object> properties, EventBus eventBus) {
+        eventBus.emit(new ContextEvent.ContextPreCreateEvent());
         Timer totalTimer = Timer.start();
         Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
-        Context context = new Context(holders, properties);
+        Context context = new Context(name, holders, properties, eventBus);
         context.init();
         holders.forEach((descriptor, creator) -> {
-            if (descriptor.getName() != null) {
-                context.get(descriptor.getType(), descriptor.getName());
+            if (descriptor.name() != null) {
+                context.get(descriptor.type(), descriptor.name());
             } else {
-                context.get(descriptor.getType());
+                context.get(descriptor.type());
             }
         });
         log.info("Created eager context in {}", totalTimer.measureAndFormat());
+        eventBus.emit(new ContextEvent.ContextPostCreateEvent());
         return context;
     }
 
     private static final Logger log = LoggerFactory.getLogger(Context.class);
+    private final String name;
     private final Map<Class<?>, List<BeanHolder<?>>> beanHoldersByType;
     private final Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders;
     private final Set<BeanHolder<?>> holders;
     private final Set<String> beanNames;
     private final Map<String, Object> properties;
+    private final EventBus eventBus;
     private boolean closed = false;
 
-    private Context(Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders, Map<String, Object> properties) {
-        this.beanHolders = requireNonNull(beanHolders);
+    private Context(String name, Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders, Map<String, Object> properties, EventBus eventBus) {
+        requireNonNull(name);
+        requireNonNull(beanHolders);
+        requireNonNull(properties);
+        requireNonNull(eventBus);
+        this.name = name;
+        this.eventBus = eventBus;
+        this.beanHolders = beanHolders;
         this.properties = Map.copyOf(properties);
         this.beanHoldersByType = groupBeanCreatorsByType(beanHolders);
         this.holders = beanHolders.values().stream()
                 .flatMap(Collection::stream)
-                .collect(toUnmodifiableSet());
+                .collect(toCollection(LinkedHashSet::new));
         this.beanNames = beanHolders.keySet().stream()
-                .map(BeanDescriptor::getName)
-                .collect(toSet());
+                .map(BeanDescriptor::name)
+                .collect(toCollection(LinkedHashSet::new));
+    }
+
+    public String getName() {
+        return name;
     }
 
     private void init() {
@@ -88,7 +106,7 @@ public final class Context implements Closeable {
     private Map<Class<?>, List<BeanHolder<?>>> groupBeanCreatorsByType(Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanCreators) {
         Map<Class<?>, List<BeanHolder<?>>> beanCreatorsByType = new HashMap<>();
         beanCreators.forEach((key, value) -> {
-            List<BeanHolder<?>> creators = beanCreatorsByType.computeIfAbsent(key.getType(), (k) -> new ArrayList<>());
+            List<BeanHolder<?>> creators = beanCreatorsByType.computeIfAbsent(key.type(), (k) -> new ArrayList<>());
             creators.addAll(value);
         });
         return beanCreatorsByType.entrySet().stream()
@@ -97,25 +115,35 @@ public final class Context implements Closeable {
     }
 
     public <T> T get(Class<T> type) {
-        checkNonNull(type, "type");
+        expectNonNull(type, "type");
         return get(descriptor(type), emptyResolutionPath());
     }
 
     public <T> T getOrNull(Class<T> type) {
-        checkNonNull(type, "type");
+        expectNonNull(type, "type");
         return getOrNull(descriptor(type), emptyResolutionPath());
     }
 
     public <T> T get(Class<T> type, String name) {
-        checkNonNull(type, "type");
-        checkNonNull(name, "name");
+        expectNonNull(type, "type");
+        expectNonNull(name, "name");
         return get(descriptor(type, name), emptyResolutionPath());
     }
 
+    public <T> T get(BeanDescriptor<T> descriptor) {
+        expectNonNull(descriptor, "descriptor");
+        return get(descriptor, emptyResolutionPath());
+    }
+
     public <T> T getOrNull(Class<T> type, String name) {
-        checkNonNull(type, "type");
-        checkNonNull(name, "name");
+        expectNonNull(type, "type");
+        expectNonNull(name, "name");
         return getOrNull(descriptor(type, name), emptyResolutionPath());
+    }
+
+    public <T> T getOrNull(BeanDescriptor<T> descriptor) {
+        expectNonNull(descriptor, "descriptor");
+        return getOrNull(descriptor, emptyResolutionPath());
     }
 
     <T> T get(BeanDescriptor<T> descriptor, ResolutionPath path) {
@@ -127,17 +155,27 @@ public final class Context implements Closeable {
     }
 
     <T> T getOrNull(BeanDescriptor<T> descriptor, ResolutionPath path) {
-        List<BeanHolder<?>> holders = beanHolders.get(descriptor);
+        List<BeanHolder<?>> holders = descriptor.hasName()
+                ? beanHolders.get(descriptor)
+                : beanHoldersByType.get(descriptor.type());
         if (holders == null || holders.isEmpty()) {
             return null;
         }
-        if (holders.size() > 1) {
+        List<BeanHolder<?>> namedHolders = holders.stream()
+                .filter(holder -> holder.getDescriptor().hasName())
+                .toList();
+        List<BeanHolder<?>> unnamedHolders = holders.stream()
+                .filter(holder -> !holder.getDescriptor().hasName())
+                .toList();
+        if (holders.size() > 1 && unnamedHolders.size() != 1) {
             throw new ContextException("Expected single bean: " + descriptor.toShortString()
                     + ". Got: " + holders.size());
         }
-        BeanHolder<?> holder = holders.get(0);
+        BeanHolder<?> holder = unnamedHolders.size() == 1
+                ? unnamedHolders.get(0)
+                : namedHolders.get(0);
         try {
-            return createBean(holder, descriptor, path.add(descriptor));
+            return createBean(holder, descriptor, path);
         } catch (Exception e) {
             Throwable cause = simplifyException(e, path);
             throw new ContextException("Could not create bean: " + descriptor.toShortString(), cause);
@@ -145,23 +183,23 @@ public final class Context implements Closeable {
     }
 
     public boolean contains(Class<?> type) {
-        checkNonNull(type, "type");
+        expectNonNull(type, "type");
         return beanHoldersByType.containsKey(type);
     }
 
     public boolean contains(String name) {
-        checkNonNull(name, "name");
+        expectNonNull(name, "name");
         return beanNames.contains(name);
     }
 
     public boolean contains(Class<?> type, String name) {
-        checkNonNull(type, "type");
-        checkNonNull(name, "name");
+        expectNonNull(type, "type");
+        expectNonNull(name, "name");
         return beanHolders.containsKey(descriptor(type, name));
     }
 
     public <T> List<T> getAll(Class<T> type) {
-        checkNonNull(type, "type");
+        expectNonNull(type, "type");
         return getAll(type, emptyResolutionPath());
     }
 
@@ -174,7 +212,7 @@ public final class Context implements Closeable {
     }
 
     public <T> List<T> getAllOrEmpty(Class<T> type) {
-        checkNonNull(type, "type");
+        expectNonNull(type, "type");
         return getAllOrEmpty(type, emptyResolutionPath());
     }
 
@@ -186,7 +224,7 @@ public final class Context implements Closeable {
         }
         try {
             return creators.stream()
-                    .map(creator -> createBean(creator, descriptor, path.add(type)))
+                    .map(creator -> createBean(creator, descriptor, path))
                     .collect(toList());
         } catch (Exception e) {
             Throwable cause = simplifyException(e, path);
@@ -199,26 +237,31 @@ public final class Context implements Closeable {
         if (closed) {
             throw new ContextException("Context already closed");
         }
-        ResolutionContext resolutionContext = new ResolutionContext(this, path);
+        if (path.contains(descriptor)) {
+            throw new CyclicDependencyException("Detected cyclic dependency: " + path.toPathAsString(descriptor));
+        }
+        ResolutionContext resolutionContext = new ResolutionContext(this, path.add(descriptor));
         Object bean = holder.get(resolutionContext);
         return (T) bean;
     }
 
     @Override
     public void close() {
+        eventBus.emit(new ContextEvent.ContextPreCloseEvent());
         ResolutionContext emptyResolutionContext = new ResolutionContext(this, emptyResolutionPath());
         Set<BeanHolder<?>> closedBeanHolders;
         long createdBeans;
         do {
             closedBeanHolders = holders.stream()
                     .filter(BeanHolder::isCached)
-                    .collect(toSet());
+                    .collect(toCollection(LinkedHashSet::new));
             closedBeanHolders.forEach(b -> b.close(emptyResolutionContext));
             createdBeans = holders.stream()
                     .filter(BeanHolder::isCached)
                     .count();
         } while (closedBeanHolders.size() < createdBeans);
         closed = true;
+        eventBus.emit(new ContextEvent.ContextPostCloseEvent());
     }
 
     private Throwable simplifyException(Throwable e, ResolutionPath path) {
@@ -227,5 +270,11 @@ public final class Context implements Closeable {
         }
         CyclicDependencyException rootCause = Throwables.getRootCauseOfType(e, CyclicDependencyException.class);
         return rootCause == null ? e : rootCause;
+    }
+
+    @Override
+    public String toString() {
+        int hashCode = this.hashCode();
+        return "Context{name='" + name + "', hashCode='" + hashCode + "', beanNames=" + beanNames + "}";
     }
 }

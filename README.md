@@ -3,17 +3,14 @@
 [![Coverage Status](https://coveralls.io/repos/github/coditory/quark-context/badge.svg)](https://coveralls.io/github/coditory/quark-context)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coditory.quark/quark-context/badge.svg)](https://mvnrepository.com/artifact/com.coditory.quark/quark-context)
 
-> Quark Context is a lightweight and single purpose java library for loading and manipulating configurations
+> Lightweight, single purpose, dependency injection java library. Similar to [IoC Container provided by Spring Framework](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans) but lighter.
 
-The idea was to create a small, single-jar library, similar to
-the [IoC Container provided by Spring Framework](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans)
-, that is:
-
-- lightweight, no dependencies
-- single purpose and is not part of a framework
+- lightweight, exactly 3 minimalistic dependencies
+- single purpose, not part of a framework
 - provides both functional and annotation based API
 - has conditional bean registration mechanism
 - detects slow bean creation
+- provides [event bus](https://github.com/coditory/quark-eventbus) integration
 
 ## Installation
 

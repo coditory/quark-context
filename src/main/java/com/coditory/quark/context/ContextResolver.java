@@ -4,14 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 
 final class ContextResolver {
     private static final Logger log = LoggerFactory.getLogger(ContextResolver.class);
@@ -21,7 +21,7 @@ final class ContextResolver {
     }
 
     static Map<BeanDescriptor<?>, List<BeanHolder<?>>> resolve(Set<BeanHolder<?>> beanHolders, Map<String, Object> properties) {
-        Set<BeanHolder<?>> holders = new HashSet<>(beanHolders);
+        Set<BeanHolder<?>> holders = new LinkedHashSet<>(beanHolders);
         ConditionContext contextWithAllBeans = ConditionContext.from(holders, properties);
         ConditionContext contextWithNoBeans = ConditionContext.from(properties);
         Set<BeanHolder<?>> stableBeanHolders = findStableBeans(holders, contextWithAllBeans, contextWithNoBeans);
@@ -35,13 +35,13 @@ final class ContextResolver {
         return holders.stream()
                 .filter(it -> it.isActive(contextWithNoBeans))
                 .filter(it -> it.isActive(contextWithAllBeans))
-                .collect(toSet());
+                .collect(toCollection(LinkedHashSet::new));
     }
 
     private static Set<BeanHolder<?>> findAdditiveBeans(Set<BeanHolder<?>> holders, ConditionContext contextWithAllBeans) {
         return holders.stream()
                 .filter(it -> it.isActive(contextWithAllBeans))
-                .collect(toSet());
+                .collect(toCollection(LinkedHashSet::new));
     }
 
     private static Map<BeanDescriptor<?>, List<BeanHolder<?>>> resolve(
@@ -50,9 +50,9 @@ final class ContextResolver {
             Set<BeanHolder<?>> remainingBeanHolders,
             Map<String, Object> properties
     ) {
-        Set<String> beanNames = new HashSet<>();
-        Set<BeanHolder<?>> registeredBeans = new HashSet<>();
-        Map<BeanDescriptor<?>, List<BeanHolder<?>>> result = new HashMap<>();
+        Set<String> beanNames = new LinkedHashSet<>();
+        Set<BeanHolder<?>> registeredBeans = new LinkedHashSet<>();
+        Map<BeanDescriptor<?>, List<BeanHolder<?>>> result = new LinkedHashMap<>();
         stableBeanHolders.forEach(holder -> {
             addBeanName(beanNames, holder);
             addBeanHolderWithClassHierarchy(result, holder);
@@ -96,7 +96,7 @@ final class ContextResolver {
                     .collect(toList());
             log.info("Registered beans: {}", names);
         }
-        Set<BeanHolder<?>> skipped = new HashSet<>();
+        Set<BeanHolder<?>> skipped = new LinkedHashSet<>();
         skipped.addAll(additiveBeanHolders);
         skipped.addAll(remainingBeanHolders);
         if (log.isDebugEnabled() && !skipped.isEmpty()) {

@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.coditory.quark.context.Args.checkNonNull;
+import static com.coditory.quark.context.Preconditions.expectNonNull;
 
 final class Throwables {
     private Throwables() {
@@ -18,8 +18,8 @@ final class Throwables {
     @Nullable
     @SuppressWarnings("unchecked")
     public static <T extends Throwable> T getRootCauseOfType(Throwable throwable, Class<T> type) {
-        checkNonNull(throwable, "throwable");
-        checkNonNull(type, "type");
+        expectNonNull(throwable, "throwable");
+        expectNonNull(type, "type");
         List<Throwable> list = getCauses(throwable);
         Collections.reverse(list);
         return list.stream()
@@ -30,7 +30,7 @@ final class Throwables {
     }
 
     private static List<Throwable> getCauses(Throwable throwable) {
-        checkNonNull(throwable, "throwable");
+        expectNonNull(throwable, "throwable");
         List<Throwable> list = new ArrayList<>();
         Set<Throwable> visited = new HashSet<>();
         while (throwable != null && !visited.contains(throwable)) {

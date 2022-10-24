@@ -21,7 +21,7 @@ final class ConstructorBasedBeanCreator<T> implements BeanCreator<T> {
             List<Constructor<T>> annotated = Arrays.stream(constructors)
                     .filter(c -> c.isAnnotationPresent(Inject.class))
                     .map(c -> (Constructor<T>) c)
-                    .collect(toList());
+                    .toList();
             if (annotated.size() == 1) {
                 constructor = annotated.get(0);
             } else if (annotated.size() > 1) {

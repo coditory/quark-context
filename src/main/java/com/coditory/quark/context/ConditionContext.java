@@ -30,7 +30,7 @@ class ConditionContext {
         this.descriptors = requireNonNull(descriptors);
         this.properties = requireNonNull(properties);
         this.names = descriptors.stream()
-                .map(BeanDescriptor::getName)
+                .map(BeanDescriptor::name)
                 .collect(toSet());
     }
 

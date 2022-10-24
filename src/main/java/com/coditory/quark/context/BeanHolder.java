@@ -1,5 +1,7 @@
 package com.coditory.quark.context;
 
+import com.coditory.quark.context.events.ContextEvent;
+import com.coditory.quark.eventbus.EventEmitter;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,7 @@ final class BeanHolder<T> {
     private final BeanDescriptor<T> descriptor;
     private final Set<Class<?>> classHierarchy;
     private final boolean eager;
+    private EventEmitter eventEmitter;
     private T bean;
     private boolean initialized = false;
     private boolean closed = false;
@@ -32,8 +35,15 @@ final class BeanHolder<T> {
     private BeanHolder(BeanDescriptor<T> descriptor, BeanCreator<T> creator, boolean eager) {
         this.creator = requireNonNull(creator);
         this.descriptor = requireNonNull(descriptor);
-        this.classHierarchy = HierarchyIterator.getClassHierarchy(descriptor.getType());
+        this.classHierarchy = HierarchyIterator.getClassHierarchy(descriptor.type());
         this.eager = eager;
+    }
+
+    void setEventEmitter(EventEmitter eventEmitter) {
+        if (this.eventEmitter != null) {
+            throw new IllegalStateException("EventEmitter was already set");
+        }
+        this.eventEmitter = requireNonNull(eventEmitter);
     }
 
     public boolean isEager() {
@@ -49,11 +59,11 @@ final class BeanHolder<T> {
     }
 
     Class<T> getBeanType() {
-        return descriptor.getType();
+        return descriptor.type();
     }
 
     String getBeanName() {
-        return descriptor.getName();
+        return descriptor.name();
     }
 
     Set<Class<?>> getBeanClassHierarchy() {
@@ -79,18 +89,21 @@ final class BeanHolder<T> {
     }
 
     boolean isActive(ConditionContext context) {
-        Timer timer = Timer.start();
+        expectEventEmitter();
+        eventEmitter.emit(new ContextEvent.BeanPreIsActiveCheckEvent(descriptor));
         boolean result = creator.isActive(context);
-        if (timer.isOverThreshold()) {
-            log.warn("Detected long bean condition check. Bean: {}, Time: {}", descriptor.toShortString(), timer.measureAndFormat());
-        }
+        eventEmitter.emit(new ContextEvent.BeanPostIsActiveCheckEvent(descriptor, result));
         return result;
     }
 
     @Nullable
     public T get(ResolutionContext context) {
         if (bean == null) {
+            expectEventEmitter();
+            ResolutionPath path = context.getResolutionPath();
+            eventEmitter.emit(new ContextEvent.BeanPreCreateEvent(descriptor, path));
             createBean(context);
+            eventEmitter.emit(new ContextEvent.BeanPostCreateEvent(descriptor, path));
         }
         return bean;
     }
@@ -102,9 +115,6 @@ final class BeanHolder<T> {
             throw new ContextException("Expected non-null bean: " + descriptor);
         }
         log.debug("Created bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
-        if (timer.isOverThreshold()) {
-            log.warn("Detected long bean creation. Bean: {}, Time: {}", descriptor.toShortString(), timer.measureAndFormat());
-        }
         if (!initialized) {
             initializeBean(bean, descriptor, context);
             initialized = true;
@@ -113,8 +123,17 @@ final class BeanHolder<T> {
 
     void close(ResolutionContext context) {
         if (!closed) {
+            expectEventEmitter();
+            eventEmitter.emit(new ContextEvent.BeanPreCloseEvent(descriptor));
             closeBean(bean, descriptor, context);
             closed = true;
+            eventEmitter.emit(new ContextEvent.BeanPostCloseEvent(descriptor));
+        }
+    }
+
+    private void expectEventEmitter() {
+        if (eventEmitter == null) {
+            throw new IllegalStateException("Expected BeanHolder to have eventEmitter");
         }
     }
 }

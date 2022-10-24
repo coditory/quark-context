@@ -2,10 +2,10 @@ package com.coditory.quark.context
 
 import spock.lang.Specification
 
-class ArgsSpec extends Specification {
+class PreconditionsSpec extends Specification {
     def "should fail non-null check"() {
         when:
-            Args.checkNonNull(null, "userName")
+            Preconditions.expectNonNull(null, "userName")
         then:
             IllegalArgumentException e = thrown(IllegalArgumentException)
             e.message == "Expected non-null value: userName. Got: null"
@@ -15,6 +15,6 @@ class ArgsSpec extends Specification {
         given:
             String name = "John"
         expect:
-            Args.checkNonNull(name, "userName") == name
+            Preconditions.expectNonNull(name, "userName") == name
     }
 }

@@ -37,9 +37,6 @@ final class BeanInitializer {
             throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
         }
         log.debug("Initialized bean {} using method {} in {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
-        if (timer.isOverThreshold()) {
-            log.warn("Detected long bean initialization. Bean: {}, Method: {}, Time: {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
-        }
     }
 
     private static void initializeBean(Initializable bean, BeanDescriptor<?> descriptor) {
@@ -50,8 +47,5 @@ final class BeanInitializer {
             throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString(), e);
         }
         log.debug("Initialized bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
-        if (timer.isOverThreshold()) {
-            log.warn("Detected long bean initialization. Bean: {}, Time: {}", descriptor.toShortString(), timer.measureAndFormat());
-        }
     }
 }
