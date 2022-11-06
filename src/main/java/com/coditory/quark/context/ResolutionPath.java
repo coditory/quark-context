@@ -46,6 +46,7 @@ public final class ResolutionPath {
         int index = 0;
         for (BeanDescriptor<?> descriptor : path) {
             indexes.put(descriptor, index);
+            index++;
         }
     }
 
@@ -91,7 +92,7 @@ public final class ResolutionPath {
     public BeanDescriptor<?> getParent(@NotNull BeanDescriptor<?> descriptor) {
         expectNonNull(descriptor, "descriptor");
         Integer index = indexes.get(descriptor);
-        return index == null ? null : path.get(index);
+        return index == null || index == 0 ? null : path.get(index - 1);
     }
 
     @NotNull
