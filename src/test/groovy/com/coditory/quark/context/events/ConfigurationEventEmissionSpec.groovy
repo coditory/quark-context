@@ -1,53 +1,34 @@
-package com.coditory.quark.context
+package com.coditory.quark.context.events
 
+import com.coditory.quark.context.Context
+import com.coditory.quark.context.ResolutionPath
 import com.coditory.quark.context.annotations.Bean
-import com.coditory.quark.context.annotations.Inject
+import com.coditory.quark.context.annotations.Configuration
 import com.coditory.quark.context.base.InMemEventHandler
-import com.coditory.quark.context.events.ContextEventHandler
 import com.coditory.quark.eventbus.EventHandler
 import spock.lang.Specification
 
 import static com.coditory.quark.context.BeanDescriptor.descriptor
 import static com.coditory.quark.context.events.ContextEvent.BeanPostCloseEvent
 import static com.coditory.quark.context.events.ContextEvent.BeanPostCreateEvent
-import static com.coditory.quark.context.events.ContextEvent.BeanPostIsActiveCheckEvent
 import static com.coditory.quark.context.events.ContextEvent.BeanPreCloseEvent
 import static com.coditory.quark.context.events.ContextEvent.BeanPreCreateEvent
-import static com.coditory.quark.context.events.ContextEvent.BeanPreIsActiveCheckEvent
 import static com.coditory.quark.context.events.ContextEvent.ContextPostCloseEvent
 import static com.coditory.quark.context.events.ContextEvent.ContextPostCreateEvent
 import static com.coditory.quark.context.events.ContextEvent.ContextPreCloseEvent
 import static com.coditory.quark.context.events.ContextEvent.ContextPreCreateEvent
 
-class ContextEventEmissionSpec extends Specification {
+class ConfigurationEventEmissionSpec extends Specification {
     SimpleHandler contextHandler = new SimpleHandler()
     Context context = Context.builder()
             .subscribe(contextHandler)
-            .scanClass(A)
-            .scanClass(B)
-            .scanClass(C)
+            .scanClass(SampleConfig)
             .build()
 
     def "should emit events when context is built"() {
         expect:
             contextHandler.events == [
                     new ContextPreCreateEvent(),
-                    // A - isActive
-                    new BeanPreIsActiveCheckEvent(descriptor(A)),
-                    new BeanPostIsActiveCheckEvent(descriptor(A), true),
-                    new BeanPreIsActiveCheckEvent(descriptor(A)),
-                    new BeanPostIsActiveCheckEvent(descriptor(A), true),
-                    // B - isActive
-                    new BeanPreIsActiveCheckEvent(descriptor(B)),
-                    new BeanPostIsActiveCheckEvent(descriptor(B), true),
-                    new BeanPreIsActiveCheckEvent(descriptor(B)),
-                    new BeanPostIsActiveCheckEvent(descriptor(B), true),
-                    // C - isActive
-                    new BeanPreIsActiveCheckEvent(descriptor(C)),
-                    new BeanPostIsActiveCheckEvent(descriptor(C), true),
-                    new BeanPreIsActiveCheckEvent(descriptor(C)),
-                    new BeanPostIsActiveCheckEvent(descriptor(C), true),
-                    // Context
                     new ContextPostCreateEvent()
             ]
     }
@@ -61,6 +42,8 @@ class ContextEventEmissionSpec extends Specification {
         then:
             contextHandler.events == [
                     new BeanPreCreateEvent(descriptor(A), ResolutionPath.of(A)),
+                    new BeanPreCreateEvent(descriptor(SampleConfig), ResolutionPath.of(A, SampleConfig)),
+                    new BeanPostCreateEvent(descriptor(SampleConfig), ResolutionPath.of(A, SampleConfig)),
                     new BeanPreCreateEvent(descriptor(B), ResolutionPath.of(A, B)),
                     new BeanPostCreateEvent(descriptor(B), ResolutionPath.of(A, B)),
                     new BeanPostCreateEvent(descriptor(A), ResolutionPath.of(A)),
@@ -79,6 +62,8 @@ class ContextEventEmissionSpec extends Specification {
         then:
             contextHandler.events == [
                     new ContextPreCloseEvent(),
+                    new BeanPreCloseEvent(descriptor(SampleConfig)),
+                    new BeanPostCloseEvent(descriptor(SampleConfig)),
                     new BeanPreCloseEvent(descriptor(A)),
                     new BeanPostCloseEvent(descriptor(A)),
                     new BeanPreCloseEvent(descriptor(B)),
@@ -90,42 +75,33 @@ class ContextEventEmissionSpec extends Specification {
             contextHandler.reset()
     }
 
-    def "should not emit context creation events to eventHandler registered as a bean"() {
-        given:
-            ContextHandler contextHandler = new ContextHandler()
-        when:
-            Context.builder()
-                    .add(contextHandler)
-                    .build()
-        then:
-            contextHandler.events == []
-    }
+    @Configuration
+    static class SampleConfig {
+        @Bean
+        A beanA(B b) {
+            return new A(b)
+        }
 
-    @Bean
-    static class A {
-        @Inject
-        A(B b) {}
-    }
+        @Bean
+        B beanB() {
+            return new B()
+        }
 
-    @Bean
-    static class B {
-
-    }
-
-    @Bean
-    static class C {
-
-    }
-
-    class SimpleHandler extends InMemEventHandler {
-        @EventHandler
-        void handle(Object event) {
-            receive(event)
+        @Bean
+        C beanC() {
+            return new C()
         }
     }
 
-    @ContextEventHandler
-    class ContextHandler extends InMemEventHandler {
+    static class A {
+        A(B b) {}
+    }
+
+    static class B {}
+
+    static class C {}
+
+    class SimpleHandler extends InMemEventHandler {
         @EventHandler
         void handle(Object event) {
             receive(event)

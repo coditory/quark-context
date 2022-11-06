@@ -89,11 +89,7 @@ final class BeanHolder<T> {
     }
 
     boolean isActive(ConditionContext context) {
-        expectEventEmitter();
-        eventEmitter.emit(new ContextEvent.BeanPreIsActiveCheckEvent(descriptor));
-        boolean result = creator.isActive(context);
-        eventEmitter.emit(new ContextEvent.BeanPostIsActiveCheckEvent(descriptor, result));
-        return result;
+        return creator.isActive(context);
     }
 
     @Nullable
@@ -101,6 +97,11 @@ final class BeanHolder<T> {
         if (bean == null) {
             expectEventEmitter();
             ResolutionPath path = context.getResolutionPath();
+            if (path.contains(descriptor)) {
+                throw new CyclicDependencyException("Detected cyclic dependency: " + path.toPathAsString(descriptor));
+            }
+            path = path.add(descriptor);
+            context = context.withPath(path);
             eventEmitter.emit(new ContextEvent.BeanPreCreateEvent(descriptor, path));
             createBean(context);
             eventEmitter.emit(new ContextEvent.BeanPostCreateEvent(descriptor, path));

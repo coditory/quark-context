@@ -12,9 +12,7 @@ public sealed interface ContextEvent permits
         ContextEvent.BeanPreCreateEvent,
         ContextEvent.BeanPostCreateEvent,
         ContextEvent.BeanPreCloseEvent,
-        ContextEvent.BeanPostCloseEvent,
-        ContextEvent.BeanPreIsActiveCheckEvent,
-        ContextEvent.BeanPostIsActiveCheckEvent {
+        ContextEvent.BeanPostCloseEvent {
 
     record ContextPreCreateEvent() implements ContextEvent {
     }
@@ -38,12 +36,6 @@ public sealed interface ContextEvent permits
     }
 
     record BeanPostCloseEvent(@NotNull BeanDescriptor<?> bean) implements ContextEvent {
-    }
-
-    record BeanPreIsActiveCheckEvent(@NotNull BeanDescriptor<?> bean) implements ContextEvent {
-    }
-
-    record BeanPostIsActiveCheckEvent(@NotNull BeanDescriptor<?> bean, boolean active) implements ContextEvent {
     }
 }
 

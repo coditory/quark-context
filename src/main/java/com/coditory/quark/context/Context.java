@@ -250,10 +250,7 @@ public final class Context implements Closeable {
         if (closed) {
             throw new ContextException("Context already closed");
         }
-        if (path.contains(descriptor)) {
-            throw new CyclicDependencyException("Detected cyclic dependency: " + path.toPathAsString(descriptor));
-        }
-        ResolutionContext resolutionContext = new ResolutionContext(this, path.add(descriptor));
+        ResolutionContext resolutionContext = new ResolutionContext(this, path);
         Object bean = holder.get(resolutionContext);
         return (T) bean;
     }

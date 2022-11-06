@@ -26,6 +26,11 @@ public final class ResolutionContext {
     }
 
     @NotNull
+    ResolutionContext withPath(ResolutionPath path) {
+        return new ResolutionContext(context, path);
+    }
+
+    @NotNull
     public <T> T get(@NotNull Class<T> type) {
         expectNonNull(type, "type");
         return context.get(descriptor(type), path);
