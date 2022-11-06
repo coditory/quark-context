@@ -2,6 +2,8 @@ package com.coditory.quark.context;
 
 import com.coditory.quark.context.events.ContextEvent;
 import com.coditory.quark.eventbus.EventBus;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,13 +26,15 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 
 public final class Context implements Closeable {
-    public static Context scanPackage(Class<?> type) {
+    @NotNull
+    public static Context scanPackage(@NotNull Class<?> type) {
         expectNonNull(type, "type");
         return builder()
                 .scanPackage(type)
                 .build();
     }
 
+    @NotNull
     public static ContextBuilder builder() {
         return new ContextBuilder();
     }
@@ -92,6 +96,7 @@ public final class Context implements Closeable {
                 .collect(toCollection(LinkedHashSet::new));
     }
 
+    @NotNull
     public String getName() {
         return name;
     }
@@ -114,34 +119,40 @@ public final class Context implements Closeable {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> unmodifiableList(e.getValue())));
     }
 
-    public <T> T get(Class<T> type) {
+    @NotNull
+    public <T> T get(@NotNull Class<T> type) {
         expectNonNull(type, "type");
         return get(descriptor(type), emptyResolutionPath());
     }
 
-    public <T> T getOrNull(Class<T> type) {
+    @Nullable
+    public <T> T getOrNull(@NotNull Class<T> type) {
         expectNonNull(type, "type");
         return getOrNull(descriptor(type), emptyResolutionPath());
     }
 
-    public <T> T get(Class<T> type, String name) {
+    @NotNull
+    public <T> T get(@NotNull Class<T> type, @NotNull String name) {
         expectNonNull(type, "type");
         expectNonNull(name, "name");
         return get(descriptor(type, name), emptyResolutionPath());
     }
 
-    public <T> T get(BeanDescriptor<T> descriptor) {
+    @NotNull
+    public <T> T get(@NotNull BeanDescriptor<T> descriptor) {
         expectNonNull(descriptor, "descriptor");
         return get(descriptor, emptyResolutionPath());
     }
 
-    public <T> T getOrNull(Class<T> type, String name) {
+    @Nullable
+    public <T> T getOrNull(@NotNull Class<T> type, @NotNull String name) {
         expectNonNull(type, "type");
         expectNonNull(name, "name");
         return getOrNull(descriptor(type, name), emptyResolutionPath());
     }
 
-    public <T> T getOrNull(BeanDescriptor<T> descriptor) {
+    @Nullable
+    public <T> T getOrNull(@NotNull BeanDescriptor<T> descriptor) {
         expectNonNull(descriptor, "descriptor");
         return getOrNull(descriptor, emptyResolutionPath());
     }
@@ -182,23 +193,24 @@ public final class Context implements Closeable {
         }
     }
 
-    public boolean contains(Class<?> type) {
+    public boolean contains(@NotNull Class<?> type) {
         expectNonNull(type, "type");
         return beanHoldersByType.containsKey(type);
     }
 
-    public boolean contains(String name) {
+    public boolean contains(@NotNull String name) {
         expectNonNull(name, "name");
         return beanNames.contains(name);
     }
 
-    public boolean contains(Class<?> type, String name) {
+    public boolean contains(@NotNull Class<?> type, @NotNull String name) {
         expectNonNull(type, "type");
         expectNonNull(name, "name");
         return beanHolders.containsKey(descriptor(type, name));
     }
 
-    public <T> List<T> getAll(Class<T> type) {
+    @NotNull
+    public <T> List<T> getAll(@NotNull Class<T> type) {
         expectNonNull(type, "type");
         return getAll(type, emptyResolutionPath());
     }
@@ -211,7 +223,8 @@ public final class Context implements Closeable {
         return beans;
     }
 
-    public <T> List<T> getAllOrEmpty(Class<T> type) {
+    @NotNull
+    public <T> List<T> getAllOrEmpty(@NotNull Class<T> type) {
         expectNonNull(type, "type");
         return getAllOrEmpty(type, emptyResolutionPath());
     }

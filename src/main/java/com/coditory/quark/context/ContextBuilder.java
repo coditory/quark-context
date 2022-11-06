@@ -43,29 +43,34 @@ public final class ContextBuilder {
     private Duration beanCreationThreshold = Duration.ofMillis(50);
     private Duration beanTotalCreationThreshold = null;
 
+    @NotNull
     public ContextBuilder setName(@NotNull String name) {
         expectUninitialized();
         this.name = expectNonBlank(name, "name");
         return this;
     }
 
+    @NotNull
     public ContextBuilder registerContextEventBus() {
         return registerContextEventBus(true);
     }
 
+    @NotNull
     public ContextBuilder registerContextEventBus(boolean register) {
         expectUninitialized();
         this.registerContextEventBus = register;
         return this;
     }
 
+    @NotNull
     public ContextBuilder subscribeContextEventHandlers(boolean subscribe) {
         expectUninitialized();
         this.subscribeContextEventHandlers = subscribe;
         return this;
     }
 
-    public ContextBuilder setEventBusExceptionHandler(DispatchExceptionHandler exceptionHandler) {
+    @NotNull
+    public ContextBuilder setEventBusExceptionHandler(@NotNull DispatchExceptionHandler exceptionHandler) {
         expectUninitialized();
         expectNonNull(exceptionHandler, "exceptionHandler");
         expect(eventBus == null, "EventBus already initialized");
@@ -73,55 +78,64 @@ public final class ContextBuilder {
         return this;
     }
 
-    public ContextBuilder subscribe(Subscription<?> listener) {
+    @NotNull
+    public ContextBuilder subscribe(@NotNull Subscription<?> listener) {
         expectUninitialized();
         eventBusBuilder.subscribe(listener);
         return this;
     }
 
-    public ContextBuilder subscribe(Object listener) {
+    @NotNull
+    public ContextBuilder subscribe(@NotNull Object listener) {
         expectUninitialized();
         eventBusBuilder.subscribe(listener);
         return this;
     }
 
-    public <T> ContextBuilder subscribe(Class<? extends T> eventType, EventListener<T> listener) {
+    @NotNull
+    public <T> ContextBuilder subscribe(@NotNull Class<? extends T> eventType, @NotNull EventListener<T> listener) {
         expectUninitialized();
         eventBusBuilder.subscribe(eventType, listener);
         return this;
     }
 
-    public ContextBuilder warnAboutSlowBeanCreation(Duration duration) {
+    @NotNull
+    public ContextBuilder warnAboutSlowBeanCreation(@NotNull Duration duration) {
         expectNonNull(duration, "duration");
         expect(!duration.isNegative(), "Expected non-negative duration");
         this.beanCreationThreshold = duration;
         return this;
     }
 
-    public ContextBuilder warnAboutSlowBeanCreationWithDependencies(Duration duration) {
+    @NotNull
+    public ContextBuilder warnAboutSlowBeanCreationWithDependencies(@NotNull Duration duration) {
         expectNonNull(duration, "duration");
         expect(!duration.isNegative(), "Expected non-negative duration");
         this.beanTotalCreationThreshold = duration;
         return this;
     }
 
-    public ContextBuilder scanPackage(Class<?> type) {
+    @NotNull
+    public ContextBuilder scanPackage(@NotNull Class<?> type) {
         expectNonNull(type, "type");
         return scanPackage(type.getPackageName(), name -> true);
     }
 
-    public ContextBuilder scanPackage(Class<?> type, Predicate<String> canonicalNameFilter) {
+    @NotNull
+    public ContextBuilder scanPackage(@NotNull Class<?> type, @NotNull Predicate<String> canonicalNameFilter) {
         expectNonNull(type, "type");
         expectNonNull(canonicalNameFilter, "canonicalNameFilter");
         return scanPackage(type.getPackageName(), canonicalNameFilter);
     }
 
-    public ContextBuilder scanPackage(String packageName) {
+    @NotNull
+    public ContextBuilder scanPackage(@NotNull String packageName) {
         expectNonNull(packageName, "packageName");
         return scanPackage(packageName, name -> true);
     }
 
-    public ContextBuilder scanPackage(String packageName, Predicate<String> canonicalNameFilter) {
+    @NotNull
+    public ContextBuilder scanPackage(@NotNull String packageName, @NotNull Predicate<String> canonicalNameFilter) {
         expectNonNull(packageName, "packageName");
         expectNonNull(canonicalNameFilter, "canonicalNameFilter");
         Iterable<Class<?>> iterable = () -> ClasspathScanner.scanPackageAndSubPackages(packageName, canonicalNameFilter);
@@ -130,7 +144,8 @@ public final class ContextBuilder {
         return this;
     }
 
-    public <T> ContextBuilder scanClass(Class<T> type) {
+    @NotNull
+    public <T> ContextBuilder scanClass(@NotNull Class<T> type) {
         expectNonNull(type, "type");
         Configuration configuration = type.getAnnotation(Configuration.class);
         if (configuration != null) {
@@ -179,21 +194,24 @@ public final class ContextBuilder {
         addBeanHolder(holder);
     }
 
-    public ContextBuilder setProperty(String name, Object value) {
+    @NotNull
+    public ContextBuilder setProperty(@NotNull String name, Object value) {
         expectNonNull(name, "name");
         expectNonNull(value, "value");
         properties.put(name, value);
         return this;
     }
 
-    public ContextBuilder setProperties(Map<String, Object> properties) {
+    @NotNull
+    public ContextBuilder setProperties(@NotNull Map<String, Object> properties) {
         expectNonNull(properties, "properties");
         this.properties.putAll(properties);
         return this;
     }
 
+    @NotNull
     @SuppressWarnings("unchecked")
-    public <T> ContextBuilder add(T bean) {
+    public <T> ContextBuilder add(@NotNull T bean) {
         expectNonNull(bean, "bean");
         BeanDescriptor<T> descriptor = descriptor((Class<T>) bean.getClass());
         BeanHolder<T> holder = holder(descriptor, (ctx) -> bean, true);
@@ -201,8 +219,9 @@ public final class ContextBuilder {
         return this;
     }
 
+    @NotNull
     @SuppressWarnings("unchecked")
-    public <T> ContextBuilder add(T bean, String name) {
+    public <T> ContextBuilder add(@NotNull T bean, @NotNull String name) {
         expectNonNull(bean, "bean");
         expectNonNull(name, "name");
         BeanDescriptor<T> descriptor = descriptor((Class<T>) bean.getClass(), name);
@@ -211,14 +230,16 @@ public final class ContextBuilder {
         return this;
     }
 
-    public <T> ContextBuilder add(Class<T> type, Predicate<ConditionContext> condition, BeanCreator<T> beanCreator) {
+    @NotNull
+    public <T> ContextBuilder add(@NotNull Class<T> type, @NotNull Predicate<ConditionContext> condition, @NotNull BeanCreator<T> beanCreator) {
         expectNonNull(condition, "condition");
         expectNonNull(type, "type");
         expectNonNull(beanCreator, "beanCreator");
         return add(type, wrapBeanCreator(condition, beanCreator));
     }
 
-    public <T> ContextBuilder add(Class<T> type, String name, Predicate<ConditionContext> condition, BeanCreator<T> beanCreator) {
+    @NotNull
+    public <T> ContextBuilder add(@NotNull Class<T> type, String name, @NotNull Predicate<ConditionContext> condition, @NotNull BeanCreator<T> beanCreator) {
         expectNonNull(condition, "condition");
         expectNonNull(type, "type");
         expectNonNull(name, "name");
@@ -229,24 +250,26 @@ public final class ContextBuilder {
     private <T> BeanCreator<T> wrapBeanCreator(Predicate<ConditionContext> condition, BeanCreator<T> beanCreator) {
         return new BeanCreator<>() {
             @Override
-            public T create(ResolutionContext context) {
+            public T create(@NotNull ResolutionContext context) {
                 return beanCreator.create(context);
             }
 
             @Override
-            public boolean isActive(ConditionContext context) {
+            public boolean isActive(@NotNull ConditionContext context) {
                 return beanCreator.isActive(context) && condition.test(context);
             }
         };
     }
 
-    public <T> ContextBuilder add(Class<T> type, BeanCreator<T> beanCreator) {
+    @NotNull
+    public <T> ContextBuilder add(@NotNull Class<T> type, @NotNull BeanCreator<T> beanCreator) {
         expectNonNull(beanCreator, "beanCreator");
         addBeanHolder(holder(descriptor(type), beanCreator));
         return this;
     }
 
-    public <T> ContextBuilder add(Class<T> type, String name, BeanCreator<T> beanCreator) {
+    @NotNull
+    public <T> ContextBuilder add(@NotNull Class<T> type, @NotNull String name, @NotNull BeanCreator<T> beanCreator) {
         expectNonNull(name, "name");
         expectNonNull(beanCreator, "beanCreator");
         addBeanHolder(holder(descriptor(type, name), beanCreator));
@@ -257,10 +280,12 @@ public final class ContextBuilder {
         beanHolders.add(holder);
     }
 
+    @NotNull
     public Context buildEager() {
         return build(() -> Context.createEager(name, beanHolders, properties, eventBus));
     }
 
+    @NotNull
     public Context build() {
         return build(() -> Context.create(name, beanHolders, properties, eventBus));
     }

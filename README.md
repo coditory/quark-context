@@ -11,6 +11,7 @@
 - has conditional bean registration mechanism
 - detects slow bean creation
 - provides [event bus](https://github.com/coditory/quark-eventbus) integration
+- public API annotated with `@NotNull` and `@Nullable` for better [kotlin integration](https://kotlinlang.org/docs/java-to-kotlin-nullability-guide.html#platform-types)
 
 ## Installation
 

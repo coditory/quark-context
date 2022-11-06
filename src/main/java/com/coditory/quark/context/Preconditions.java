@@ -17,7 +17,7 @@ final class Preconditions {
 
     public static <T> T expectNonNull(@Nullable T value, String name) {
         if (value == null) {
-            String message = message("Expected non-null value", name, null);
+            String message = message("Expected non-null value", name);
             throw new IllegalArgumentException(message);
         }
         return value;
@@ -25,7 +25,7 @@ final class Preconditions {
 
     public static String expectNonBlank(@Nullable String value, String name) {
         if (value == null || value.isBlank()) {
-            String message = message("Expected non-null and non-blank value", name, null);
+            String message = message("Expected non-null and non-blank value", name, value);
             throw new IllegalArgumentException(message);
         }
         return value;
@@ -37,5 +37,10 @@ final class Preconditions {
                 ? ("\"" + value + "\"")
                 : Objects.toString(value);
         return expectation + field + ". Got: " + stringValue;
+    }
+
+    private static String message(String expectation, String fieldName) {
+        String field = fieldName != null ? (": " + fieldName) : "";
+        return expectation + field;
     }
 }

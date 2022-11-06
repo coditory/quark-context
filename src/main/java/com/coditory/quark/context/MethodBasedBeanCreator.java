@@ -1,5 +1,7 @@
 package com.coditory.quark.context;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -24,8 +26,9 @@ final class MethodBasedBeanCreator<T> implements BeanCreator<T> {
     }
 
     @SuppressWarnings("unchecked")
+    @NotNull
     @Override
-    public T create(ResolutionContext context) {
+    public T create(@NotNull ResolutionContext context) {
         Object object = holder.get(context);
         Object[] args = resolveArguments(method, context);
         try {
@@ -36,7 +39,7 @@ final class MethodBasedBeanCreator<T> implements BeanCreator<T> {
     }
 
     @Override
-    public boolean isActive(ConditionContext context) {
+    public boolean isActive(@NotNull ConditionContext context) {
         return holder.isActive(context) && ConditionsResolver.isActive(context, method);
     }
 }

@@ -17,15 +17,15 @@ final class ConditionsResolver {
         throw new UnsupportedOperationException("Do not instantiate utility class");
     }
 
-    public static boolean isActive(ConditionContext context, Method method) {
+    static boolean isActive(ConditionContext context, Method method) {
         return isActive(context, method.getAnnotations());
     }
 
-    public static boolean isActive(ConditionContext context, Class<?> type) {
+    static boolean isActive(ConditionContext context, Class<?> type) {
         return isActive(context, type.getAnnotations());
     }
 
-    private static boolean isActive(ConditionContext context, Annotation[] annotations) {
+    static boolean isActive(ConditionContext context, Annotation[] annotations) {
         return Arrays.stream(annotations)
                 .allMatch(annotation -> isActive(context, annotation));
     }

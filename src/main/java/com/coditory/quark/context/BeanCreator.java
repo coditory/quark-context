@@ -1,10 +1,13 @@
 package com.coditory.quark.context;
 
+import org.jetbrains.annotations.NotNull;
+
 @FunctionalInterface
 public interface BeanCreator<T> {
-    T create(ResolutionContext context);
+    @NotNull
+    T create(@NotNull ResolutionContext context);
 
-    default boolean isActive(ConditionContext context) {
+    default boolean isActive(@NotNull ConditionContext context) {
         return true;
     }
 }

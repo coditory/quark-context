@@ -1,5 +1,8 @@
 package com.coditory.quark.context;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,21 +24,23 @@ public final class ResolutionPath {
         return EMPTY;
     }
 
-    public static ResolutionPath of(Class<?>... types) {
+    @NotNull
+    public static ResolutionPath of(@NotNull Class<?>... types) {
         List<BeanDescriptor<?>> path = Arrays.stream(types)
                 .map(BeanDescriptor::descriptor)
                 .collect(toList());
         return new ResolutionPath(path);
     }
 
-    public static ResolutionPath of(Class<?> type, String name) {
+    @NotNull
+    public static ResolutionPath of(@NotNull Class<?> type, String name) {
         return new ResolutionPath(List.of(descriptor(type, name)));
     }
 
     private final List<BeanDescriptor<?>> path;
     private final Map<BeanDescriptor<?>, Integer> indexes = new HashMap<>();
 
-    private ResolutionPath(List<BeanDescriptor<?>> path) {
+    private ResolutionPath(@NotNull List<BeanDescriptor<?>> path) {
         requireNonNull(path);
         this.path = List.copyOf(path);
         int index = 0;
@@ -48,15 +53,15 @@ public final class ResolutionPath {
         return path.isEmpty();
     }
 
-    public boolean contains(Class<?> type) {
+    public boolean contains(@NotNull Class<?> type) {
         return contains(type, null);
     }
 
-    public boolean contains(Class<?> type, String name) {
+    public boolean contains(@NotNull Class<?> type, String name) {
         return contains(descriptor(type, name));
     }
 
-    public boolean contains(BeanDescriptor<?> descriptor) {
+    public boolean contains(@NotNull BeanDescriptor<?> descriptor) {
         return indexes.containsKey(descriptor);
     }
 
@@ -64,26 +69,32 @@ public final class ResolutionPath {
         return path.size();
     }
 
+    @Nullable
     public BeanDescriptor<?> first() {
         return path.isEmpty() ? null : path.get(0);
     }
 
+    @Nullable
     public BeanDescriptor<?> last() {
         return path.isEmpty() ? null : path.get(path.size() - 1);
     }
 
+    @Nullable
     public BeanDescriptor<?> get(int index) {
-        expect(index < path.size(), "Expected index <= path.size()");
-        expect(index >= 0, "Expected index >= 0");
+        if (index >= path.size() || index < 0) {
+            return null;
+        }
         return path.get(index);
     }
 
-    public BeanDescriptor<?> getParent(BeanDescriptor<?> descriptor) {
+    @Nullable
+    public BeanDescriptor<?> getParent(@NotNull BeanDescriptor<?> descriptor) {
         expectNonNull(descriptor, "descriptor");
         Integer index = indexes.get(descriptor);
         return index == null ? null : path.get(index);
     }
 
+    @NotNull
     public ResolutionPath removeFirst() {
         if (path.isEmpty()) {
             return this;
@@ -91,6 +102,7 @@ public final class ResolutionPath {
         return remove(path.get(0));
     }
 
+    @NotNull
     public ResolutionPath removeLast() {
         if (path.isEmpty()) {
             return this;
@@ -98,29 +110,33 @@ public final class ResolutionPath {
         return remove(path.get(path.size() - 1));
     }
 
-    public ResolutionPath remove(BeanDescriptor<?> descriptor) {
+    @NotNull
+    public ResolutionPath remove(@NotNull BeanDescriptor<?> descriptor) {
         List<BeanDescriptor<?>> newPath = new ArrayList<>(path);
         newPath.remove(descriptor);
         return new ResolutionPath(newPath);
     }
 
-    public boolean startsWith(BeanDescriptor<?> descriptor) {
+    public boolean startsWith(@NotNull BeanDescriptor<?> descriptor) {
         return !path.isEmpty() && path.get(0).equals(descriptor);
     }
 
-    public boolean endsWith(BeanDescriptor<?> descriptor) {
+    public boolean endsWith(@NotNull BeanDescriptor<?> descriptor) {
         return !path.isEmpty() && path.get(path.size() - 1).equals(descriptor);
     }
 
-    public ResolutionPath add(Class<?> type) {
+    @NotNull
+    public ResolutionPath add(@NotNull Class<?> type) {
         return add(type, null);
     }
 
-    public ResolutionPath add(BeanDescriptor<?> descriptor) {
+    @NotNull
+    public ResolutionPath add(@NotNull BeanDescriptor<?> descriptor) {
         return add(descriptor.type(), descriptor.name());
     }
 
-    public ResolutionPath add(Class<?> type, String name) {
+    @NotNull
+    public ResolutionPath add(@NotNull Class<?> type, String name) {
         BeanDescriptor<?> element = descriptor(type, name);
         expect(!path.contains(element), "Duplicated element on resolution path");
         List<BeanDescriptor<?>> newPath = new ArrayList<>(path);
@@ -128,10 +144,12 @@ public final class ResolutionPath {
         return new ResolutionPath(newPath);
     }
 
+    @NotNull
     public String toPathAsString() {
         return toPathAsString(null);
     }
 
+    @NotNull
     public String toPathAsString(BeanDescriptor<?> descriptor) {
         List<BeanDescriptor<?>> newPath = this.path;
         if (descriptor != null) {

@@ -1,6 +1,7 @@
 package com.coditory.quark.context;
 
 import com.coditory.quark.context.annotations.Inject;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -44,8 +45,9 @@ final class ConstructorBasedBeanCreator<T> implements BeanCreator<T> {
         this.constructor = requireNonNull(constructor);
     }
 
+    @NotNull
     @Override
-    public T create(ResolutionContext context) {
+    public T create(@NotNull ResolutionContext context) {
         Object[] args = resolveArguments(constructor, context);
         try {
             return constructor.newInstance(args);
@@ -55,7 +57,7 @@ final class ConstructorBasedBeanCreator<T> implements BeanCreator<T> {
     }
 
     @Override
-    public boolean isActive(ConditionContext context) {
+    public boolean isActive(@NotNull ConditionContext context) {
         return ConditionsResolver.isActive(context, type);
     }
 }

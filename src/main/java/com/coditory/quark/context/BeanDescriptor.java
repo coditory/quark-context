@@ -1,22 +1,27 @@
 package com.coditory.quark.context;
 
+import org.jetbrains.annotations.NotNull;
+
 import static java.util.Objects.requireNonNull;
 
 public record BeanDescriptor<T>(Class<T> type, String name) {
-    public static <T> BeanDescriptor<T> descriptor(Class<T> type) {
+    @NotNull
+    public static <T> BeanDescriptor<T> descriptor(@NotNull Class<T> type) {
         return new BeanDescriptor<>(type, null);
     }
 
-    public static <T> BeanDescriptor<T> descriptor(Class<T> type, String name) {
+    @NotNull
+    public static <T> BeanDescriptor<T> descriptor(@NotNull Class<T> type, String name) {
         return new BeanDescriptor<>(type, name);
     }
 
-    public BeanDescriptor(Class<T> type, String name) {
+    public BeanDescriptor(@NotNull Class<T> type, String name) {
         this.type = requireNonNull(type);
         this.name = name == null || name.isBlank() ? null : name;
     }
 
-    public <R> BeanDescriptor<R> withType(Class<R> type) {
+    @NotNull
+    public <R> BeanDescriptor<R> withType(@NotNull Class<R> type) {
         return new BeanDescriptor<>(type, name);
     }
 
@@ -24,6 +29,7 @@ public record BeanDescriptor<T>(Class<T> type, String name) {
         return name != null;
     }
 
+    @NotNull
     public String toShortString() {
         return name != null
                 ? type.getSimpleName() + ":" + name
@@ -32,8 +38,6 @@ public record BeanDescriptor<T>(Class<T> type, String name) {
 
     @Override
     public String toString() {
-        return name != null
-                ? type.getSimpleName() + ":" + name
-                : type.getSimpleName();
+        return "BeanDescriptor{" + toShortString() + "}";
     }
 }

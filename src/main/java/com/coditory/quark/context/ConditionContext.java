@@ -10,7 +10,7 @@ import static com.coditory.quark.context.BeanDescriptor.descriptor;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 
-class ConditionContext {
+final class ConditionContext {
     static ConditionContext from(Set<BeanHolder<?>> holders, Map<String, Object> properties) {
         Set<BeanDescriptor<?>> descriptors = holders.stream()
                 .map(BeanHolder::getDescriptor)

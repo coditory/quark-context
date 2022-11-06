@@ -8,7 +8,7 @@ class PreconditionsSpec extends Specification {
             Preconditions.expectNonNull(null, "userName")
         then:
             IllegalArgumentException e = thrown(IllegalArgumentException)
-            e.message == "Expected non-null value: userName. Got: null"
+            e.message == "Expected non-null value: userName"
     }
 
     def "should pass non-null check"() {
