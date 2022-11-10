@@ -13,8 +13,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,6 +47,8 @@ public final class ContextBuilder {
     private EventBus eventBus;
     private Duration beanCreationThreshold = Duration.ofMillis(50);
     private Duration beanTotalCreationThreshold = null;
+    private ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    private final List<Iterable<Class<?>>> classpathScanners = new ArrayList<>();
 
     @NotNull
     public ContextBuilder setName(@NotNull String name) {
@@ -153,9 +157,7 @@ public final class ContextBuilder {
     public ContextBuilder scanPackage(@NotNull String packageName, @NotNull Predicate<String> canonicalNameFilter) {
         expectNonNull(packageName, "packageName");
         expectNonNull(canonicalNameFilter, "canonicalNameFilter");
-        Iterable<Class<?>> iterable = () -> ClasspathScanner.scanPackageAndSubPackages(packageName, canonicalNameFilter);
-        StreamSupport.stream(iterable.spliterator(), false)
-                .forEach(this::scanClass);
+        classpathScanners.add(() -> ClasspathScanner.scanPackageAndSubPackages(packageName, canonicalNameFilter, classLoader));
         return this;
     }
 
@@ -315,6 +317,7 @@ public final class ContextBuilder {
     private void initialize() {
         expectUninitialized();
         initializeName();
+        scanPackages();
         initializeEventBus();
         initialized = true;
     }
@@ -324,6 +327,14 @@ public final class ContextBuilder {
         int counter = DEFAULT_NAME_COUNTER.incrementAndGet();
         String defaultName = "Context";
         name = counter > 1 ? defaultName + "-" + counter : defaultName;
+    }
+
+    private void scanPackages() {
+        expectUninitialized();
+        classpathScanners.stream()
+                .flatMap(it -> StreamSupport.stream(it.spliterator(), false))
+                .distinct()
+                .forEach(this::scanClass);
     }
 
     private void initializeEventBus() {
@@ -339,7 +350,8 @@ public final class ContextBuilder {
             Set<BeanHolder<?>> configHolders = beanHolders.stream()
                     .filter(holder -> holder.getDescriptor().type().isAnnotationPresent(Configuration.class))
                     .collect(toCollection(LinkedHashSet::new));
-            EventEmitter nullEventEmitter = (event) -> {};
+            EventEmitter nullEventEmitter = (event) -> {
+            };
             configHolders.forEach(h -> h.setEventEmitter(nullEventEmitter));
             beanHolders.removeAll(configHolders);
         }

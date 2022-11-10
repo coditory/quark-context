@@ -12,13 +12,9 @@ import java.util.Queue;
 import java.util.function.Predicate;
 
 final class ClasspathScanner implements Iterator<Class<?>> {
-    static ClasspathScanner scanPackageAndSubPackages(String packageName) {
-        return scanPackageAndSubPackages(packageName, (name) -> true);
-    }
-
-    static ClasspathScanner scanPackageAndSubPackages(String packageName, Predicate<String> filter) {
+    static ClasspathScanner scanPackageAndSubPackages(String packageName, Predicate<String> filter, ClassLoader classLoader) {
         try {
-            return new ClasspathScanner(getClasses(packageName, filter));
+            return new ClasspathScanner(getClasses(packageName, filter), classLoader);
         } catch (IOException e) {
             throw new RuntimeException("Could not scan classpath", e);
         }
@@ -68,8 +64,8 @@ final class ClasspathScanner implements Iterator<Class<?>> {
     private final ClassLoader classLoader;
     private final Queue<String> classesToScan;
 
-    ClasspathScanner(List<String> classesToScan) {
-        this.classLoader = Thread.currentThread().getContextClassLoader();
+    ClasspathScanner(List<String> classesToScan, ClassLoader classLoader) {
+        this.classLoader = classLoader;
         this.classesToScan = new LinkedList<>(classesToScan);
     }
 

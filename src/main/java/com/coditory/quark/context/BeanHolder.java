@@ -54,20 +54,12 @@ final class BeanHolder<T> {
         return initialized;
     }
 
-    public boolean isClosed() {
-        return closed;
-    }
-
     Class<T> getBeanType() {
         return descriptor.type();
     }
 
     String getBeanName() {
         return descriptor.name();
-    }
-
-    Set<Class<?>> getBeanClassHierarchy() {
-        return classHierarchy;
     }
 
     Set<BeanDescriptor<?>> getBeanClassHierarchyDescriptors() {
@@ -82,10 +74,6 @@ final class BeanHolder<T> {
 
     boolean isCached() {
         return bean != null;
-    }
-
-    T getCached() {
-        return bean;
     }
 
     boolean isActive(ConditionContext context) {
@@ -136,5 +124,10 @@ final class BeanHolder<T> {
         if (eventEmitter == null) {
             throw new IllegalStateException("Expected BeanHolder to have eventEmitter");
         }
+    }
+
+    @Override
+    public String toString() {
+        return "BeanHolder{" + descriptor.toShortString() + '}';
     }
 }
