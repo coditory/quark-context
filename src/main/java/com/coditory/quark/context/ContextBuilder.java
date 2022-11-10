@@ -86,6 +86,14 @@ public final class ContextBuilder {
     }
 
     @NotNull
+    public ContextBuilder setClassLoader(@NotNull ClassLoader classLoader) {
+        expectUninitialized();
+        expectNonNull(classLoader, "classLoader");
+        this.classLoader = classLoader;
+        return this;
+    }
+
+    @NotNull
     public ContextBuilder registerConfigurationBeans() {
         return registerConfigurationBeans(true);
     }
