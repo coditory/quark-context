@@ -42,8 +42,6 @@ class ConfigurationEventEmissionSpec extends Specification {
         then:
             contextHandler.events == [
                     new BeanPreCreateEvent(descriptor(A), ResolutionPath.of(A)),
-                    new BeanPreCreateEvent(descriptor(SampleConfig), ResolutionPath.of(A, SampleConfig)),
-                    new BeanPostCreateEvent(descriptor(SampleConfig), ResolutionPath.of(A, SampleConfig)),
                     new BeanPreCreateEvent(descriptor(B), ResolutionPath.of(A, B)),
                     new BeanPostCreateEvent(descriptor(B), ResolutionPath.of(A, B)),
                     new BeanPostCreateEvent(descriptor(A), ResolutionPath.of(A)),
@@ -58,6 +56,45 @@ class ConfigurationEventEmissionSpec extends Specification {
             context.get(C)
             contextHandler.reset()
         when:
+            context.close()
+        then:
+            contextHandler.events == [
+                    new ContextPreCloseEvent(),
+                    new BeanPreCloseEvent(descriptor(A)),
+                    new BeanPostCloseEvent(descriptor(A)),
+                    new BeanPreCloseEvent(descriptor(B)),
+                    new BeanPostCloseEvent(descriptor(B)),
+                    new BeanPreCloseEvent(descriptor(C)),
+                    new BeanPostCloseEvent(descriptor(C)),
+                    new ContextPostCloseEvent(),
+            ]
+            contextHandler.reset()
+    }
+
+    def "should emit events for Configuration beans when context is closed"() {
+        given:
+            Context context = Context.builder()
+                    .subscribe(contextHandler)
+                    .scanClass(SampleConfig)
+                    .registerConfigurationBeans()
+                    .build()
+            contextHandler.reset()
+        when:
+            context.get(A)
+            context.get(C)
+        then:
+            contextHandler.events == [
+                    new BeanPreCreateEvent(descriptor(A), ResolutionPath.of(A)),
+                    new BeanPreCreateEvent(descriptor(SampleConfig), ResolutionPath.of(A, SampleConfig)),
+                    new BeanPostCreateEvent(descriptor(SampleConfig), ResolutionPath.of(A, SampleConfig)),
+                    new BeanPreCreateEvent(descriptor(B), ResolutionPath.of(A, B)),
+                    new BeanPostCreateEvent(descriptor(B), ResolutionPath.of(A, B)),
+                    new BeanPostCreateEvent(descriptor(A), ResolutionPath.of(A)),
+                    new BeanPreCreateEvent(descriptor(C), ResolutionPath.of(C)),
+                    new BeanPostCreateEvent(descriptor(C), ResolutionPath.of(C))
+            ]
+        when:
+            contextHandler.reset()
             context.close()
         then:
             contextHandler.events == [

@@ -33,7 +33,10 @@ class BeanLifecycleSpec extends Specification {
 
     def "should finalize beans when closing the context"() {
         given:
-            Context context = Context.scanPackage(ConfigLifecycle)
+            Context context = Context.builder()
+                    .scanPackage(ConfigLifecycle)
+                    .registerConfigurationBeans()
+                    .build()
         and:
             ConfigLifecycle config = context.get(ConfigLifecycle)
             annotated.samples.beans_lifecycle.Bar bar = context.get(annotated.samples.beans_lifecycle.Bar)

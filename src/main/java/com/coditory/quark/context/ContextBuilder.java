@@ -6,6 +6,7 @@ import com.coditory.quark.context.events.ContextEventHandler;
 import com.coditory.quark.eventbus.DispatchExceptionHandler;
 import com.coditory.quark.eventbus.EventBus;
 import com.coditory.quark.eventbus.EventBusBuilder;
+import com.coditory.quark.eventbus.EventEmitter;
 import com.coditory.quark.eventbus.EventListener;
 import com.coditory.quark.eventbus.Subscription;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +28,7 @@ import static com.coditory.quark.context.ConstructorBasedBeanCreator.fromConstru
 import static com.coditory.quark.context.Preconditions.expect;
 import static com.coditory.quark.context.Preconditions.expectNonBlank;
 import static com.coditory.quark.context.Preconditions.expectNonNull;
+import static java.util.stream.Collectors.toCollection;
 
 public final class ContextBuilder {
     public static final String CONTEXT_EVENT_BUS_NAME = "ContextEventBus";
@@ -37,6 +39,7 @@ public final class ContextBuilder {
             .setName(CONTEXT_EVENT_BUS_NAME);
     private boolean initialized = false;
     private String name;
+    private boolean registerConfigurationBeans = false;
     private boolean registerContextEventBus = false;
     private boolean subscribeContextEventHandlers = true;
     private EventBus eventBus;
@@ -75,6 +78,18 @@ public final class ContextBuilder {
         expectNonNull(exceptionHandler, "exceptionHandler");
         expect(eventBus == null, "EventBus already initialized");
         eventBusBuilder.setExceptionHandler(exceptionHandler);
+        return this;
+    }
+
+    @NotNull
+    public ContextBuilder registerConfigurationBeans() {
+        return registerConfigurationBeans(true);
+    }
+
+    @NotNull
+    public ContextBuilder registerConfigurationBeans(boolean register) {
+        expectUninitialized();
+        this.registerConfigurationBeans = register;
         return this;
     }
 
@@ -319,6 +334,14 @@ public final class ContextBuilder {
         eventBus = eventBusBuilder.build();
         if (registerContextEventBus) {
             add(eventBus, eventBus.getName());
+        }
+        if (!registerConfigurationBeans) {
+            Set<BeanHolder<?>> configHolders = beanHolders.stream()
+                    .filter(holder -> holder.getDescriptor().type().isAnnotationPresent(Configuration.class))
+                    .collect(toCollection(LinkedHashSet::new));
+            EventEmitter nullEventEmitter = (event) -> {};
+            configHolders.forEach(h -> h.setEventEmitter(nullEventEmitter));
+            beanHolders.removeAll(configHolders);
         }
         for (BeanHolder<?> holder : beanHolders) {
             holder.setEventEmitter(eventBus);

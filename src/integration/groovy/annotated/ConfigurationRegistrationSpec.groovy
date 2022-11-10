@@ -58,7 +58,10 @@ class ConfigurationRegistrationSpec extends Specification {
 
     def "should initialize eager configuration right after context is built"() {
         when:
-            Context.scanPackage(ConfigEagerInit)
+            Context.builder()
+                    .scanPackage(ConfigEagerInit)
+                    .registerConfigurationBeans()
+                    .build()
         then:
             ConfigEagerInit.initialized == true
             ConfigEagerInit.bar != null
