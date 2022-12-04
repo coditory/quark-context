@@ -165,7 +165,7 @@ public final class ContextBuilder {
     public ContextBuilder scanPackage(@NotNull String packageName, @NotNull Predicate<String> canonicalNameFilter) {
         expectNonNull(packageName, "packageName");
         expectNonNull(canonicalNameFilter, "canonicalNameFilter");
-        classpathScanners.add(() -> ClasspathScanner.scanPackageAndSubPackages(packageName, canonicalNameFilter, classLoader));
+        classpathScanners.add(() -> ClassPathScanner.scanPackageAndSubPackages(packageName, canonicalNameFilter, classLoader));
         return this;
     }
 

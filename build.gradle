@@ -12,10 +12,10 @@ group = 'com.coditory.quark'
 description = 'Coditory Quark Context Library'
 
 dependencies {
-    api 'org.slf4j:slf4j-api:2.0.3'
+    api 'org.slf4j:slf4j-api:2.0.5'
     api 'org.jetbrains:annotations:23.0.0'
     api 'com.coditory.quark:quark-eventbus:0.0.5'
-    testImplementation 'ch.qos.logback:logback-classic:1.4.4'
+    testImplementation 'ch.qos.logback:logback-classic:1.4.5'
     testImplementation 'org.spockframework:spock-core:2.3-groovy-4.0'
     testImplementation 'org.skyscreamer:jsonassert:1.5.1'
 }
