@@ -20,7 +20,7 @@ on:
         required: true
         default: AUTO
   release:
-    types: [ published ]
+    types: [published]
 
 jobs:
   release:
@@ -34,8 +34,12 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             /repos/${{ github.repository }}/actions/runs?status=success\&head_sha=${{ github.sha }} \
             | jq 'limit(1; .workflow_runs[] | select(.name == "Build" and .conclusion == "success"))')"
-          if [ -z "$BUILD_SUCCESS" ]; then
-            echo "Commit did not pass Build!"
+          declare -r LAST_AUTHOR="$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/commits/${{ github.sha }} \
+            | jq -r '.author.login')"
+          if [ "$LAST_AUTHOR" != "coditory-bot" ] && [ -z "$BUILD_SUCCESS" ]; then
+            echo "Last commit did not pass Build!"
             exit 1
           fi
 
@@ -66,7 +70,7 @@ jobs:
           echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           echo -e "VERSION: $VERSION\nNEXT_VERSION: $NEXT_VERSION"
 
-      - name: Import GPG key
+      - name: Import gpg key (release only)
         id: gpg
         uses: crazy-max/ghaction-import-gpg@v5
         if: |
@@ -81,7 +85,7 @@ jobs:
           git_committer_name: Coditory Bot
           git_committer_email: bot@coditory.com
 
-      - name: Update version in README (master only)
+      - name: Update version in readme (release only)
         if: steps.gpg.conclusion == 'success'
         env:
           PREV_VERSION: ${{ steps.versions.outputs.version }}
@@ -90,6 +94,7 @@ jobs:
           declare -r ESC_PREV_VERSION="${PREV_VERSION//./\\.}"
           echo "Changing: $PREV_VERSION -> $NEXT_VERSION"
           sed -i "s|${ESC_PREV_VERSION}|${NEXT_VERSION}|" README.md
+          sed -i "s|${ESC_PREV_VERSION}|${NEXT_VERSION}|" gradle.properties
           if [ -n "$(git status --porcelain)" ]; then
             git add -A
             git commit -a -m "Update version $PREV_VERSION -> $NEXT_VERSION" -m "[ci skip]"
@@ -98,7 +103,7 @@ jobs:
             echo "Nothing changed. Skipping commit."
           fi
 
-      - name: Setup JDK
+      - name: Setup jdk
         if: inputs.publish != 'SKIP'
         uses: actions/setup-java@v3
         with:
@@ -106,7 +111,7 @@ jobs:
           cache: gradle
           distribution: temurin
 
-      - name: Publish release
+      - name: Publish release (release only)
         if: |
           github.event_name == 'release'
           || inputs.publish == 'RELEASE'
@@ -121,7 +126,7 @@ jobs:
           ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -Pversion=$NEXT_VERSION -Ppublish --info
           echo "Published release: $NEXT_VERSION"
 
-      - name: Generate release notes
+      - name: Generate release notes (release only)
         id: notes
         if: |
           github.event_name != 'release'
@@ -143,7 +148,7 @@ jobs:
           declare -r ESCAPED="${NOTES//$'\n'/'%0A'}"
           echo "notes=$ESCAPED" >> $GITHUB_OUTPUT
 
-      - name: Create github release (master only)
+      - name: Create github release (release only)
         if: steps.notes.conclusion == 'success'
         uses: ncipollo/release-action@v1
         with:
@@ -154,7 +159,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "build/libs/*.jar"
 
-      - name: Publish snapshot
+      - name: Publish snapshot (snapshot only)
         if: |
           github.event_name == 'workflow_dispatch'
           && (
