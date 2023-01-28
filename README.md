@@ -1,6 +1,6 @@
 # Quark Context
 [![Build](https://github.com/coditory/quark-context/actions/workflows/build.yml/badge.svg)](https://github.com/coditory/quark-context/actions/workflows/build.yml)
-[![Coverage Status](https://coveralls.io/repos/github/coditory/quark-context/badge.svg)](https://coveralls.io/github/coditory/quark-context)
+[![Coverage](https://codecov.io/github/coditory/quark-context/branch/master/graph/badge.svg?token=4VK4CVJVSN)](https://codecov.io/github/coditory/quark-context)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.coditory.quark/quark-context/badge.svg)](https://mvnrepository.com/artifact/com.coditory.quark/quark-context)
 
 > Lightweight, single purpose, dependency injection java library. Similar to [IoC Container provided by Spring Framework](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans) but lighter.
