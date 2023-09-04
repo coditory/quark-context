@@ -11,7 +11,7 @@ jobs:
       github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Validate gradle wrapper
         uses: gradle/wrapper-validation-action@v1
