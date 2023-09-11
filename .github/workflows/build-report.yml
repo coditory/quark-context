@@ -41,7 +41,7 @@ jobs:
         run: unzip build-reports.zip
 
       - name: Publish test report
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@v4
         continue-on-error: true
         with:
           commit: ${{ github.event.workflow_run.head_sha }}
