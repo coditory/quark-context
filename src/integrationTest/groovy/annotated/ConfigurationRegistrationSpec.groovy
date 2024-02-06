@@ -60,7 +60,6 @@ class ConfigurationRegistrationSpec extends Specification {
         when:
             Context.builder()
                     .scanPackage(ConfigEagerInit)
-                    .registerConfigurationBeans()
                     .build()
         then:
             ConfigEagerInit.initialized == true

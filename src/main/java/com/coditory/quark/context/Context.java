@@ -39,23 +39,23 @@ public final class Context implements Closeable {
         return new ContextBuilder();
     }
 
-    static Context create(String name, Set<BeanHolder<?>> beanHolders, Map<String, Object> properties, EventBus eventBus) {
+    static Context create(String name, Set<BeanHolder<?>> beanHolders, Set<BeanHolder<?>> initBeanHolders, Map<String, Object> properties, EventBus eventBus) {
         eventBus.emit(new ContextEvent.ContextPreCreateEvent());
         Timer totalTimer = Timer.start();
         Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
         Context context = new Context(name, holders, properties, eventBus);
-        context.init();
+        context.init(initBeanHolders);
         log.info("Created context in {}", totalTimer.measureAndFormat());
         eventBus.emit(new ContextEvent.ContextPostCreateEvent());
         return context;
     }
 
-    static Context createEager(String name, Set<BeanHolder<?>> beanHolders, Map<String, Object> properties, EventBus eventBus) {
+    static Context createEager(String name, Set<BeanHolder<?>> beanHolders, Set<BeanHolder<?>> initBeanHolders, Map<String, Object> properties, EventBus eventBus) {
         eventBus.emit(new ContextEvent.ContextPreCreateEvent());
         Timer totalTimer = Timer.start();
         Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
         Context context = new Context(name, holders, properties, eventBus);
-        context.init();
+        context.init(initBeanHolders);
         holders.forEach((descriptor, creator) -> {
             if (descriptor.name() != null) {
                 context.get(descriptor.type(), descriptor.name());
@@ -101,8 +101,11 @@ public final class Context implements Closeable {
         return name;
     }
 
-    private void init() {
+    private void init(Set<BeanHolder<?>> initBeanHolders) {
         ResolutionContext context = new ResolutionContext(this, emptyResolutionPath());
+        initBeanHolders.stream()
+                .filter(BeanHolder::isEager)
+                .forEach(holder -> holder.get(context));
         this.holders.stream()
                 .filter(BeanHolder::isEager)
                 .forEach(holder -> holder.get(context));
