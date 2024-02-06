@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -339,9 +340,11 @@ final class ClassPath {
                 try {
                     urls.add(new File(entry).toURI().toURL());
                 } catch (SecurityException e) { // File.toURI checks to see if the file is a directory
-                    urls.add(new URL("file", null, new File(entry).getAbsolutePath()));
+                    // File.toURI checks to see if the file is a directory
+                    URI uri = new URI("file", null, new File(entry).getAbsolutePath(), null);
+                    urls.add(uri.toURL());
                 }
-            } catch (MalformedURLException e) {
+            } catch (MalformedURLException|URISyntaxException e) {
                 logger.warn("Malformed classpath entry: " + entry, e);
             }
         }
@@ -349,7 +352,7 @@ final class ClassPath {
     }
 
     private static URL getClassPathEntry(File jarFile, String path) throws MalformedURLException {
-        return new URL(jarFile.toURI().toURL(), path);
+        return jarFile.toURI().resolve(path).toURL();
     }
 
     private static String getClassName(String filename) {

@@ -22,8 +22,7 @@ labels: bug
 
 ## Your Environment
 <!-- Include as many relevant details about the environment you experienced the bug in -->
+
 * Library version:
 * Java (and/or Kotlin) version:
-* Gradle version:
-* Gradle scan link (add `--scan` option when running the gradle task):
 * Link to your project (if it's a public repository):

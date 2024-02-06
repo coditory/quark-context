@@ -1,8 +1,10 @@
 plugins {
+    id("build.version")
     id("build.java")
+    id("build.kotlin")
     id("build.test")
     id("build.coverage")
-    id("build.publish")
+    id("build.publishing")
 }
 
 dependencies {

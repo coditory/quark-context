@@ -26,7 +26,7 @@ tasks.withType<Test> {
 
 tasks.register<JacocoReport>("coverage") {
     description = "Creates combined coverage report"
-    executionData(fileTree(project.buildDir).include("jacoco/*.exec"))
+    executionData(fileTree(project.layout.buildDirectory).include("jacoco/*.exec"))
     sourceSets(project.extensions.getByType(JavaPluginExtension::class).sourceSets.getByName("main"))
     dependsOn(tasks.findByName("test"), tasks.findByName("integrationTest"))
     reports {

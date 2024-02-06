@@ -1,14 +1,18 @@
-@file:Suppress("UnstableApiUsage", "HasPlatformType", "UNUSED_VARIABLE")
+@file:Suppress("UnstableApiUsage", "HasPlatformType")
 
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id("java-library")
+    id("build.java")
     id("groovy")
 }
 
 val libs = extensions.getByType(org.gradle.accessors.dm.LibrariesForLibs::class)
+
+dependencies {
+    testImplementation(libs.groovy)
+}
 
 testing {
     suites {
