@@ -36,7 +36,10 @@ final class SlowBeanCreationDetector {
                     .add(event.bean());
             parentDependencies.computeIfAbsent(event.bean(), (k) -> new HashSet<>())
                     .add(parent);
-            timers.get(parent).pause();
+            Timer parentTimer = timers.get(parent);
+            if (parentTimer != null) {
+                parentTimer.pause();
+            }
         }
     }
 
@@ -45,8 +48,9 @@ final class SlowBeanCreationDetector {
         for (BeanDescriptor<?> parent : parentDependencies.getOrDefault(event.bean(), Set.of())) {
             Set<BeanDescriptor<?>> children = dependencies.computeIfAbsent(parent, (k) -> new HashSet<>());
             children.remove(event.bean());
-            if (children.isEmpty()) {
-                timers.get(parent).resume();
+            Timer parentTimer = timers.get(parent);
+            if (children.isEmpty() && parentTimer != null) {
+                parentTimer.resume();
             }
         }
         dependencies.remove(event.bean());
