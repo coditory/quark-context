@@ -35,7 +35,11 @@ final class BeanFinalizer {
             Object[] args = resolveArguments(method, context);
             method.invoke(bean, args);
         } catch (Exception e) {
-            throw new BeanFinalizationException("Could not close bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
+            if (e instanceof UnsupportedOperationException) {
+                log.debug("Bean {} threw UnsupportedOperationException from {}", descriptor.toShortString(), simplifyMethodName(method));
+            } else {
+                throw new BeanFinalizationException("Could not close bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
+            }
         }
         log.debug("Closed bean {} using method {} in {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
     }
