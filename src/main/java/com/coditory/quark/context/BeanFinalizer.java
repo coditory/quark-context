@@ -34,23 +34,23 @@ final class BeanFinalizer {
         try {
             Object[] args = resolveArguments(method, context);
             method.invoke(bean, args);
+            log.debug("Closed bean {} using method {} in {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
+        } catch (UnsupportedOperationException e) {
+            log.debug("Could not close bean {} because of UnsupportedOperationException thrown from {}", descriptor.toShortString(), simplifyMethodName(method));
         } catch (Exception e) {
-            if (e instanceof UnsupportedOperationException) {
-                log.debug("Bean {} threw UnsupportedOperationException from {}", descriptor.toShortString(), simplifyMethodName(method));
-            } else {
-                throw new BeanFinalizationException("Could not close bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
-            }
+            throw new BeanFinalizationException("Could not close bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
         }
-        log.debug("Closed bean {} using method {} in {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
     }
 
     private static void closeBean(Closeable bean, BeanDescriptor<?> descriptor) {
         Timer timer = Timer.start();
         try {
             bean.close();
+            log.debug("Closed bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
+        } catch (UnsupportedOperationException e) {
+            log.debug("Could not close bean {} because of UnsupportedOperationException", descriptor.toShortString());
         } catch (Exception e) {
             throw new BeanFinalizationException("Could not close bean: " + descriptor.toShortString(), e);
         }
-        log.debug("Closed bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
     }
 }
