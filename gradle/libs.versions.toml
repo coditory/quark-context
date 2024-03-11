@@ -2,7 +2,7 @@
 # build tools
 java = "21"
 jacoco = "0.8.11"
-kotlin = "1.9.22"
+kotlin = "1.9.23"
 groovy = "4.0.19"
 
 [libraries]
