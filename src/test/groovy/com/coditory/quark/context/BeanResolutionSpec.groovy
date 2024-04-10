@@ -49,7 +49,7 @@ class BeanResolutionSpec extends Specification {
             context.getOrNull(Bar)
         then:
             ContextException e = thrown(ContextException)
-            e.message == "Expected single bean: Bar. Got: 2"
+            e.message == "Expected single bean: Bar. Found 2 beans."
     }
 
     def "should fail to retrieve bean by type when multiple unnamed beans are registered"() {
@@ -62,7 +62,7 @@ class BeanResolutionSpec extends Specification {
             context.getOrNull(Bar)
         then:
             ContextException e = thrown(ContextException)
-            e.message == "Expected single bean: Bar. Got: 2"
+            e.message == "Expected single bean: Bar. Found 2 beans."
     }
 
     def "should retrieve named bean by type and name"() {

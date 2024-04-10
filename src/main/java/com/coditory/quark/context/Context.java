@@ -60,7 +60,7 @@ public final class Context implements Closeable {
             if (descriptor.name() != null) {
                 context.get(descriptor.type(), descriptor.name());
             } else {
-                context.get(descriptor.type());
+                context.getAll(descriptor.type());
             }
         });
         log.info("Created eager context in {}", totalTimer.measureAndFormat());
@@ -183,7 +183,7 @@ public final class Context implements Closeable {
                 .toList();
         if (holders.size() > 1 && unnamedHolders.size() != 1) {
             throw new ContextException("Expected single bean: " + descriptor.toShortString()
-                    + ". Got: " + holders.size());
+                    + ". Found " + holders.size() + " beans.");
         }
         BeanHolder<?> holder = unnamedHolders.size() == 1
                 ? unnamedHolders.get(0)
