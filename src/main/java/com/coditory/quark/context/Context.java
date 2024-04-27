@@ -56,13 +56,23 @@ public final class Context implements Closeable {
         Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
         Context context = new Context(name, holders, properties, eventBus);
         context.init(initBeanHolders);
-        holders.forEach((descriptor, creator) -> {
-            if (descriptor.name() != null) {
-                context.get(descriptor.type(), descriptor.name());
-            } else {
-                context.getAll(descriptor.type());
+        try {
+            holders.forEach((descriptor, creator) -> {
+                if (descriptor.name() != null) {
+                    context.get(descriptor.type(), descriptor.name());
+                } else if (descriptor.type() != Object.class) {
+                    // Object is too generic, can be skipped for more readable exceptions
+                    context.getAll(descriptor.type());
+                }
+            });
+        } catch (Throwable exception) {
+            try {
+                context.close();
+            } catch (Throwable closeException) {
+                log.warn("Could not close context", closeException);
             }
-        });
+            throw exception;
+        }
         log.info("Created eager context in {}", totalTimer.measureAndFormat());
         eventBus.emit(new ContextEvent.ContextPostCreateEvent());
         return context;
