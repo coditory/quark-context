@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.List;
 
@@ -85,10 +86,28 @@ final class DependencyResolver {
         }
         if (List.class == parameterType) {
             ParameterizedType parameterizedType = (ParameterizedType) genericType;
-            Class<?> listItemType = (Class<?>) parameterizedType.getActualTypeArguments()[0];
-            return required
-                    ? context.getAll(listItemType)
-                    : context.getAllOrEmpty(listItemType);
+            Type type = parameterizedType.getActualTypeArguments()[0];
+            if (type instanceof Class<?> listItemType) {
+                return required
+                        ? context.getAll(listItemType)
+                        : context.getAllOrEmpty(listItemType);
+            }
+            if (type instanceof WildcardType wildcardItemType) {
+                if (wildcardItemType.getUpperBounds() == null || wildcardItemType.getUpperBounds().length != 1) {
+                    throw new IllegalArgumentException("Invalid number of upper bound arguments");
+                }
+                if (wildcardItemType.getLowerBounds() != null && wildcardItemType.getLowerBounds().length != 0) {
+                    throw new IllegalArgumentException("Unexpected lower bound type in list dependency");
+                }
+                Type upperBound = wildcardItemType.getUpperBounds()[0];
+                if (upperBound instanceof Class<?> lowerBoundClass) {
+                    return required
+                            ? context.getAll(lowerBoundClass)
+                            : context.getAllOrEmpty(lowerBoundClass);
+                }
+                throw new IllegalArgumentException("Unexpected lower bound type: " + upperBound);
+            }
+            throw new ContextException("Invalid List generic type in dependency: " + name);
         }
         if (!name.isEmpty()) {
             return required

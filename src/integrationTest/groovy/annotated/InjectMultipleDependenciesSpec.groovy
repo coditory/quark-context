@@ -16,6 +16,17 @@ class InjectMultipleDependenciesSpec extends Specification {
             bar.foo.size() == 2
     }
 
+    def "should inject list of beans with extends"() {
+        given:
+            Context context = Context.scanPackage(annotated.samples.multiple_deps.Bar2)
+        when:
+            annotated.samples.multiple_deps.Bar2 bar = context.get(annotated.samples.multiple_deps.Bar2)
+
+        then:
+            bar.foo != null
+            bar.foo.size() == 2
+    }
+
     def "should inject empty list for no beans and optional dependency"() {
         given:
             Context context = Context.scanPackage(annotated.samples.optional_multiple_deps.Bar)
