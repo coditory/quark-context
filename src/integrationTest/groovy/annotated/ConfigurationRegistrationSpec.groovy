@@ -3,6 +3,7 @@ package annotated
 import annotated.samples.config_init.ConfigEagerInit
 import annotated.samples.config_init.ConfigInit
 import annotated.samples.config_inject.ConfigInject
+import annotated.samples.config_post_init.ConfigPostInit
 import com.coditory.quark.context.Context
 import spock.lang.Specification
 
@@ -64,5 +65,17 @@ class ConfigurationRegistrationSpec extends Specification {
         then:
             ConfigEagerInit.initialized == true
             ConfigEagerInit.bar != null
+    }
+
+    def "should post initialize configuration with dependency on internal bean"() {
+        when:
+            Context.builder()
+                    .scanPackage(ConfigPostInit)
+                    .build()
+                    .get(annotated.samples.config_post_init.Foo)
+        then:
+            ConfigPostInit.postInitialized == true
+            ConfigPostInit.bar != null
+            ConfigPostInit.baz != null
     }
 }

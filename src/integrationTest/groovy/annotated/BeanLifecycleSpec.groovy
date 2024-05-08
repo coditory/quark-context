@@ -11,17 +11,21 @@ class BeanLifecycleSpec extends Specification {
             Context context = Context.scanPackage(ConfigLifecycle)
         then:
             annotated.samples.beans_lifecycle.Bar.initialized == false
+            annotated.samples.beans_lifecycle.Bar.postInitialized == false
             annotated.samples.beans_lifecycle.Baz.initialized == false
+            annotated.samples.beans_lifecycle.Baz.postInitialized == false
 
         when:
             context.get(annotated.samples.beans_lifecycle.Bar)
         then:
             annotated.samples.beans_lifecycle.Bar.initialized
+            annotated.samples.beans_lifecycle.Bar.postInitialized
 
         when:
             context.get(annotated.samples.beans_lifecycle.Baz)
         then:
             annotated.samples.beans_lifecycle.Baz.initialized
+            annotated.samples.beans_lifecycle.Baz.postInitialized
     }
 
     def "should initialize eager bean right after context is built"() {
@@ -29,13 +33,13 @@ class BeanLifecycleSpec extends Specification {
             Context.scanPackage(EagerBar)
         then:
             EagerBar.initialized == true
+            EagerBar.postInitialized == true
     }
 
     def "should finalize beans when closing the context"() {
         given:
             Context context = Context.builder()
                     .scanPackage(ConfigLifecycle)
-                    .registerConfigurationBeans()
                     .build()
         and:
             ConfigLifecycle config = context.get(ConfigLifecycle)

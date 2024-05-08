@@ -37,6 +37,11 @@ public final class ResolutionPath {
         return new ResolutionPath(List.of(descriptor(type, name)));
     }
 
+    @NotNull
+    public static ResolutionPath of(@NotNull BeanDescriptor<?> descriptor) {
+        return new ResolutionPath(List.of(descriptor));
+    }
+
     private final List<BeanDescriptor<?>> path;
     private final Map<BeanDescriptor<?>, Integer> indexes = new HashMap<>();
 

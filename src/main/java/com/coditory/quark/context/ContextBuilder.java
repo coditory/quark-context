@@ -3,6 +3,7 @@ package com.coditory.quark.context;
 import com.coditory.quark.context.annotations.Bean;
 import com.coditory.quark.context.annotations.Configuration;
 import com.coditory.quark.context.annotations.Init;
+import com.coditory.quark.context.annotations.PostInit;
 import com.coditory.quark.context.events.ContextEventHandler;
 import com.coditory.quark.eventbus.DispatchExceptionHandler;
 import com.coditory.quark.eventbus.EventBus;
@@ -36,14 +37,12 @@ import static java.util.stream.Collectors.toCollection;
 public final class ContextBuilder {
     public static final String CONTEXT_EVENT_BUS_NAME = "ContextEventBus";
     private final AtomicInteger DEFAULT_NAME_COUNTER = new AtomicInteger(1);
-    private final Set<BeanHolder<?>> initBeanHolders = new LinkedHashSet<>();
     private final Set<BeanHolder<?>> beanHolders = new LinkedHashSet<>();
     private final Map<String, Object> properties = new LinkedHashMap<>();
     private final EventBusBuilder eventBusBuilder = EventBus.builder()
             .setName(CONTEXT_EVENT_BUS_NAME);
     private boolean initialized = false;
     private String name;
-    private boolean registerConfigurationBeans = false;
     private boolean registerContextEventBus = false;
     private boolean subscribeContextEventHandlers = true;
     private EventBus eventBus;
@@ -92,18 +91,6 @@ public final class ContextBuilder {
         expectUninitialized();
         expectNonNull(classLoader, "classLoader");
         this.classLoader = classLoader;
-        return this;
-    }
-
-    @NotNull
-    public ContextBuilder registerConfigurationBeans() {
-        return registerConfigurationBeans(true);
-    }
-
-    @NotNull
-    public ContextBuilder registerConfigurationBeans(boolean register) {
-        expectUninitialized();
-        this.registerConfigurationBeans = register;
         return this;
     }
 
@@ -199,20 +186,11 @@ public final class ContextBuilder {
                 : configuration.name();
         BeanHolder<T> holder = holder(descriptor(type, name), fromConstructor(type), configuration.eager());
         addBeanHolder(holder);
-        boolean hasInit = false;
-        boolean hasBean = false;
         for (Method method : type.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(Init.class)) {
-                hasInit = true;
-            }
             if (method.isAnnotationPresent(Bean.class)) {
                 method.setAccessible(true);
                 addFromAnnotatedConfiguration(holder, method, method.getReturnType());
-                hasBean = true;
             }
-        }
-        if (hasInit && (configuration.eager() || !hasBean)) {
-            initBeanHolders.add(holder);
         }
     }
 
@@ -319,12 +297,12 @@ public final class ContextBuilder {
 
     @NotNull
     public Context buildEager() {
-        return build(() -> Context.createEager(name, beanHolders, initBeanHolders, properties, eventBus));
+        return build(() -> Context.createEager(name, beanHolders, properties, eventBus));
     }
 
     @NotNull
     public Context build() {
-        return build(() -> Context.create(name, beanHolders, initBeanHolders, properties, eventBus));
+        return build(() -> Context.create(name, beanHolders, properties, eventBus));
     }
 
     private Context build(Supplier<Context> contextCreator) {
@@ -338,19 +316,9 @@ public final class ContextBuilder {
         expectUninitialized();
         initializeName();
         scanPackages();
-        filterConfigBeanHolders();
+        // filterConfigBeanHolders();
         initializeEventBus();
         initialized = true;
-    }
-
-    private void filterConfigBeanHolders() {
-        if (registerConfigurationBeans) return;
-        Set<BeanHolder<?>> configHolders = beanHolders.stream()
-                .filter(holder -> holder.getDescriptor().type().isAnnotationPresent(Configuration.class))
-                .collect(toCollection(LinkedHashSet::new));
-        EventEmitter nullEventEmitter = (event) -> {};
-        configHolders.forEach(h -> h.setEventEmitter(nullEventEmitter));
-        beanHolders.removeAll(configHolders);
     }
 
     private void initializeName() {

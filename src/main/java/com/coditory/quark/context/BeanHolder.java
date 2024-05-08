@@ -10,6 +10,8 @@ import java.util.Set;
 
 import static com.coditory.quark.context.BeanFinalizer.closeBean;
 import static com.coditory.quark.context.BeanInitializer.initializeBean;
+import static com.coditory.quark.context.BeanPostInitializer.postInitializeBean;
+import static com.coditory.quark.context.ResolutionPath.emptyResolutionPath;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 
@@ -30,6 +32,7 @@ final class BeanHolder<T> {
     private EventEmitter eventEmitter;
     private T bean;
     private boolean initialized = false;
+    private boolean postInitialized = false;
     private boolean closed = false;
 
     private BeanHolder(BeanDescriptor<T> descriptor, BeanCreator<T> creator, boolean eager) {
@@ -52,6 +55,20 @@ final class BeanHolder<T> {
 
     public boolean isInitialized() {
         return initialized;
+    }
+
+    boolean isPostInitialized() {
+        return postInitialized;
+    }
+
+    void postInitialize(Context context) {
+        if (postInitialized) return;
+        if (bean == null) {
+            throw new IllegalStateException("Expected bean to exist before post initialization");
+        }
+        ResolutionContext resolutionContext = new ResolutionContext(context, ResolutionPath.of(descriptor));
+        postInitialized = true;
+        postInitializeBean(bean, descriptor, resolutionContext);
     }
 
     Class<T> getBeanType() {
@@ -100,9 +117,6 @@ final class BeanHolder<T> {
     private void createBean(ResolutionContext context) {
         Timer timer = Timer.start();
         bean = creator.create(context);
-        if (bean == null) {
-            throw new ContextException("Expected non-null bean: " + descriptor);
-        }
         log.debug("Created bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
         if (!initialized) {
             initializeBean(bean, descriptor, context);

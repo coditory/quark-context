@@ -39,23 +39,23 @@ public final class Context implements Closeable {
         return new ContextBuilder();
     }
 
-    static Context create(String name, Set<BeanHolder<?>> beanHolders, Set<BeanHolder<?>> initBeanHolders, Map<String, Object> properties, EventBus eventBus) {
+    static Context create(String name, Set<BeanHolder<?>> beanHolders, Map<String, Object> properties, EventBus eventBus) {
         eventBus.emit(new ContextEvent.ContextPreCreateEvent());
         Timer totalTimer = Timer.start();
         Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
         Context context = new Context(name, holders, properties, eventBus);
-        context.init(initBeanHolders);
+        context.init();
         log.info("Created context in {}", totalTimer.measureAndFormat());
         eventBus.emit(new ContextEvent.ContextPostCreateEvent());
         return context;
     }
 
-    static Context createEager(String name, Set<BeanHolder<?>> beanHolders, Set<BeanHolder<?>> initBeanHolders, Map<String, Object> properties, EventBus eventBus) {
+    static Context createEager(String name, Set<BeanHolder<?>> beanHolders, Map<String, Object> properties, EventBus eventBus) {
         eventBus.emit(new ContextEvent.ContextPreCreateEvent());
         Timer totalTimer = Timer.start();
         Map<BeanDescriptor<?>, List<BeanHolder<?>>> holders = ContextResolver.resolve(beanHolders, properties);
         Context context = new Context(name, holders, properties, eventBus);
-        context.init(initBeanHolders);
+        context.init();
         try {
             holders.forEach((descriptor, creator) -> {
                 if (descriptor.name() != null) {
@@ -84,7 +84,6 @@ public final class Context implements Closeable {
     private final Map<BeanDescriptor<?>, List<BeanHolder<?>>> beanHolders;
     private final Set<BeanHolder<?>> holders;
     private final Set<String> beanNames;
-    private final Map<String, Object> properties;
     private final EventBus eventBus;
     private boolean closed = false;
 
@@ -96,7 +95,6 @@ public final class Context implements Closeable {
         this.name = name;
         this.eventBus = eventBus;
         this.beanHolders = beanHolders;
-        this.properties = Map.copyOf(properties);
         this.beanHoldersByType = groupBeanCreatorsByType(beanHolders);
         this.holders = beanHolders.values().stream()
                 .flatMap(Collection::stream)
@@ -111,12 +109,9 @@ public final class Context implements Closeable {
         return name;
     }
 
-    private void init(Set<BeanHolder<?>> initBeanHolders) {
+    private void init() {
         ResolutionContext context = new ResolutionContext(this, emptyResolutionPath());
-        initBeanHolders.stream()
-                .filter(BeanHolder::isEager)
-                .forEach(holder -> holder.get(context));
-        this.holders.stream()
+        holders.stream()
                 .filter(BeanHolder::isEager)
                 .forEach(holder -> holder.get(context));
     }
@@ -196,14 +191,23 @@ public final class Context implements Closeable {
                     + ". Found " + holders.size() + " beans.");
         }
         BeanHolder<?> holder = unnamedHolders.size() == 1
-                ? unnamedHolders.get(0)
-                : namedHolders.get(0);
+                ? unnamedHolders.getFirst()
+                : namedHolders.getFirst();
+        T bean;
         try {
-            return createBean(holder, descriptor, path);
+            bean = createBean(holder, descriptor, path);
         } catch (Exception e) {
             Throwable cause = simplifyException(e, path);
             throw new ContextException("Could not create bean: " + descriptor.toShortString(), cause);
         }
+        postInitBeans();
+        return bean;
+    }
+
+    private void postInitBeans() {
+        holders.stream()
+                .filter(BeanHolder::isInitialized)
+                .forEach(h -> h.postInitialize(this));
     }
 
     public boolean contains(@NotNull Class<?> type) {
@@ -248,14 +252,17 @@ public final class Context implements Closeable {
         if (creators == null || creators.isEmpty()) {
             return List.of();
         }
+        List<T> beans;
         try {
-            return creators.stream()
+            beans = creators.stream()
                     .map(creator -> createBean(creator, descriptor, path))
                     .collect(toList());
         } catch (Exception e) {
             Throwable cause = simplifyException(e, path);
             throw new ContextException("Could not create beans: " + descriptor.toShortString(), cause);
         }
+        postInitBeans();
+        return beans;
     }
 
     @SuppressWarnings("unchecked")
