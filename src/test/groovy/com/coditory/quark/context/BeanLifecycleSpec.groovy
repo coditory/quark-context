@@ -22,7 +22,6 @@ class BeanLifecycleSpec extends Specification {
         when:
             LifecycleImplemented lifecycleImplemented = context.get(LifecycleImplemented)
         then:
-            lifecycleImplemented.initialized
             !lifecycleImplemented.finalized
     }
 
@@ -57,7 +56,6 @@ class BeanLifecycleSpec extends Specification {
             context.close()
         then:
             lifecycleAnnotated.initialized
-            lifecycleImplemented.initialized
     }
 
     def "should not initialize lazy beans that were not retrieved from the context"() {
@@ -73,7 +71,6 @@ class BeanLifecycleSpec extends Specification {
             context.close()
         then:
             !lifecycleAnnotated.initialized
-            !lifecycleImplemented.initialized
     }
 
     def "should inject dependencies to lifecycle annotated methods"() {
@@ -146,14 +143,8 @@ class BeanLifecycleSpec extends Specification {
         }
     }
 
-    static class LifecycleImplemented implements Initializable, Closeable {
-        boolean initialized = false
+    static class LifecycleImplemented implements Closeable {
         boolean finalized = false
-
-        @Override
-        void init() {
-            initialized = true
-        }
 
         @Override
         void close() {

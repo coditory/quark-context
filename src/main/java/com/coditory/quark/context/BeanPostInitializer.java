@@ -17,9 +17,6 @@ final class BeanPostInitializer {
     }
 
     static void postInitializeBean(Object bean, BeanDescriptor<?> descriptor, ResolutionContext context) {
-        if (bean instanceof PostInitializable) {
-            postInitializeBean((PostInitializable) bean, descriptor);
-        }
         for (Method method : bean.getClass().getDeclaredMethods()) {
             if (method.isAnnotationPresent(PostInit.class)) {
                 method.setAccessible(true);
@@ -37,15 +34,5 @@ final class BeanPostInitializer {
             throw new BeanInitializationException("Could not post initialize bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
         }
         log.debug("Post initialized bean {} using method {} in {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
-    }
-
-    private static void postInitializeBean(PostInitializable bean, BeanDescriptor<?> descriptor) {
-        Timer timer = Timer.start();
-        try {
-            bean.postInit();
-        } catch (Exception e) {
-            throw new BeanInitializationException("Could not post initialize bean: " + descriptor.toShortString(), e);
-        }
-        log.debug("Post initialized bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
     }
 }

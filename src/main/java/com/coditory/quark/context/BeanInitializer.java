@@ -17,9 +17,6 @@ final class BeanInitializer {
     }
 
     static void initializeBean(Object bean, BeanDescriptor<?> descriptor, ResolutionContext context) {
-        if (bean instanceof Initializable) {
-            initializeBean((Initializable) bean, descriptor);
-        }
         for (Method method : bean.getClass().getDeclaredMethods()) {
             if (method.isAnnotationPresent(Init.class)) {
                 method.setAccessible(true);
@@ -37,15 +34,5 @@ final class BeanInitializer {
             throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString() + " using method: " + simplifyMethodName(method), e);
         }
         log.debug("Initialized bean {} using method {} in {}", descriptor.toShortString(), simplifyMethodName(method), timer.measureAndFormat());
-    }
-
-    private static void initializeBean(Initializable bean, BeanDescriptor<?> descriptor) {
-        Timer timer = Timer.start();
-        try {
-            bean.init();
-        } catch (Exception e) {
-            throw new BeanInitializationException("Could not initialize bean: " + descriptor.toShortString(), e);
-        }
-        log.debug("Initialized bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
     }
 }
