@@ -11,7 +11,7 @@ kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.
 gradle-nexus-publish = { module = "io.github.gradle-nexus:publish-plugin", version = "1.1.0" }
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
 # dependencies
-slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.16" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.17" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version = "24.1.0" }
 quark-eventbus = { module = "com.coditory.quark:quark-eventbus", version = "0.0.5" }
 # test dependencies
