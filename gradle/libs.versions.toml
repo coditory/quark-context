@@ -12,7 +12,7 @@ gradle-nexus-publish = { module = "io.github.gradle-nexus:publish-plugin", versi
 groovy = { module = "org.apache.groovy:groovy", version.ref = "groovy" }
 # dependencies
 slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.17" }
-jetbrains-annotations = { module = "org.jetbrains:annotations", version = "24.1.0" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.0.2-1" }
 quark-eventbus = { module = "com.coditory.quark:quark-eventbus", version = "0.0.5" }
 # test dependencies
 spock-core = { module = "org.spockframework:spock-core", version = "2.4-M6-groovy-4.0" }
