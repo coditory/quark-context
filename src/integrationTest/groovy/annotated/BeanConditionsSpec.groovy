@@ -1,3 +1,4 @@
+//file:noinspection UnnecessaryQualifiedReference
 package annotated
 
 import com.coditory.quark.context.Context

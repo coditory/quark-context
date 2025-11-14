@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.coditory.quark.context.BeanDescriptor.descriptor;
+import static com.coditory.quark.context.BeanHolder.holder;
 import static com.coditory.quark.context.Preconditions.expectNonNull;
 import static com.coditory.quark.context.ResolutionPath.emptyResolutionPath;
 import static java.util.Collections.unmodifiableList;
@@ -94,6 +95,12 @@ public final class Context implements Closeable {
         requireNonNull(eventBus);
         this.name = name;
         this.eventBus = eventBus;
+        // register self
+        BeanDescriptor<Context> descriptor = descriptor(Context.class);
+        BeanHolder<Context> holder = holder(descriptor, (ResolutionContext r) -> this, true);
+        holder.setEventEmitter(eventBus);
+        beanHolders.put(descriptor, List.of(holder));
+        // index beans
         this.beanHolders = beanHolders;
         this.beanHoldersByType = groupBeanCreatorsByType(beanHolders);
         this.holders = beanHolders.values().stream()
