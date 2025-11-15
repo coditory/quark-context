@@ -2,13 +2,10 @@ package com.coditory.quark.context;
 
 import com.coditory.quark.context.annotations.Bean;
 import com.coditory.quark.context.annotations.Configuration;
-import com.coditory.quark.context.annotations.Init;
-import com.coditory.quark.context.annotations.PostInit;
 import com.coditory.quark.context.events.ContextEventHandler;
 import com.coditory.quark.eventbus.DispatchExceptionHandler;
 import com.coditory.quark.eventbus.EventBus;
 import com.coditory.quark.eventbus.EventBusBuilder;
-import com.coditory.quark.eventbus.EventEmitter;
 import com.coditory.quark.eventbus.EventListener;
 import com.coditory.quark.eventbus.Subscription;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,7 +31,6 @@ import static com.coditory.quark.context.ConstructorBasedBeanCreator.fromConstru
 import static com.coditory.quark.context.Preconditions.expect;
 import static com.coditory.quark.context.Preconditions.expectNonBlank;
 import static com.coditory.quark.context.Preconditions.expectNonNull;
-import static java.util.stream.Collectors.toCollection;
 
 public final class ContextBuilder {
     public static final String CONTEXT_EVENT_BUS_NAME = "ContextEventBus";
@@ -187,12 +185,14 @@ public final class ContextBuilder {
         BeanConfig config = BeanConfig.fromAnnotationOrDefault(configuration);
         BeanHolder<T> holder = holder(descriptor(type, name), fromConstructor(type), config);
         addBeanHolder(holder);
-        for (Method method : type.getDeclaredMethods()) {
-            if (method.isAnnotationPresent(Bean.class)) {
-                method.setAccessible(true);
-                addFromAnnotatedConfiguration(holder, method, method.getReturnType());
-            }
-        }
+        Arrays.stream(type.getDeclaredMethods())
+                .filter((Method method) -> method.isAnnotationPresent(Bean.class))
+                // sort by name to stabilize registration order
+                .sorted(Comparator.comparing(Method::getName))
+                .forEach((Method method) -> {
+                    method.setAccessible(true);
+                    addFromAnnotatedConfiguration(holder, method, method.getReturnType());
+                });
     }
 
     private <T> void addFromAnnotatedConfiguration(BeanHolder<?> holder, Method method, Class<T> returnType) {
