@@ -18,6 +18,9 @@ final class BeanFinalizer {
     }
 
     static void closeBean(Object bean, BeanDescriptor<?> descriptor, ResolutionContext context) {
+        if (bean instanceof Context) {
+            return;
+        }
         if (bean instanceof Closeable) {
             closeBean((Closeable) bean, descriptor);
         }

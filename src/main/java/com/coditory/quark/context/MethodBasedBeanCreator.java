@@ -29,9 +29,9 @@ final class MethodBasedBeanCreator<T> implements BeanCreator<T> {
     @NotNull
     @Override
     public T create(@NotNull ResolutionContext context) {
-        Object object = holder.get(context);
-        Object[] args = resolveArguments(method, context);
         try {
+            Object object = holder.get(context);
+            Object[] args = resolveArguments(method, context);
             return (T) method.invoke(object, args);
         } catch (Exception e) {
             throw new ContextException("Could not create bean from method: " + simplifyMethodName(method), e);

@@ -47,7 +47,8 @@ class InjectMultipleDependenciesSpec extends Specification {
         then:
             ContextException e = thrown(ContextException)
             e.message == "Could not create bean: Baz"
-            e.cause.message == "Beans not found for type: Foo"
+            e.cause.message == "Could not create bean from constructor: public annotated.samples.optional_multiple_deps.Baz(java.util.List)"
+            e.cause.cause.message == "Beans not found for type: Foo"
     }
 
     def "should fail injecting named list of beans"() {
@@ -59,6 +60,7 @@ class InjectMultipleDependenciesSpec extends Specification {
         then:
             ContextException e = thrown(ContextException)
             e.message == "Could not create bean: Bar"
-            e.cause.message.startsWith("Detected named @Dependency for a list of dependencies")
+            e.cause.message == "Could not create bean from constructor: public annotated.samples.named_multiple_deps.Bar(java.util.List)"
+            e.cause.cause.message.startsWith("Detected named @Dependency for a list of dependencies")
     }
 }

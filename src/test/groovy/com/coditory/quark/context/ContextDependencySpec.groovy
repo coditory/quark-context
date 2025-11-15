@@ -2,7 +2,7 @@ package com.coditory.quark.context
 
 import spock.lang.Specification
 
-class BeanDependenciesSpec extends Specification {
+class ContextDependencySpec extends Specification {
     def "should register bean with dependency on the dependency context"() {
         given:
             Context context = Context.builder()

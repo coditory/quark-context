@@ -11,7 +11,6 @@ import java.util.Set;
 import static com.coditory.quark.context.BeanFinalizer.closeBean;
 import static com.coditory.quark.context.BeanInitializer.initializeBean;
 import static com.coditory.quark.context.BeanPostInitializer.postInitializeBean;
-import static com.coditory.quark.context.ResolutionPath.emptyResolutionPath;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 
@@ -145,3 +144,4 @@ final class BeanHolder<T> {
         return "BeanHolder{" + descriptor.toShortString() + '}';
     }
 }
+

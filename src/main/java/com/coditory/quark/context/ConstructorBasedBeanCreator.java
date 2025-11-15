@@ -24,7 +24,7 @@ final class ConstructorBasedBeanCreator<T> implements BeanCreator<T> {
                     .map(c -> (Constructor<T>) c)
                     .toList();
             if (annotated.size() == 1) {
-                constructor = annotated.get(0);
+                constructor = annotated.getFirst();
             } else if (annotated.size() > 1) {
                 throw new ContextException("Expected single constructor annotated with @Inject in class: "
                         + type.getCanonicalName() + ". Got: " + annotated.size());
@@ -48,11 +48,11 @@ final class ConstructorBasedBeanCreator<T> implements BeanCreator<T> {
     @NotNull
     @Override
     public T create(@NotNull ResolutionContext context) {
-        Object[] args = resolveArguments(constructor, context);
         try {
+            Object[] args = resolveArguments(constructor, context);
             return constructor.newInstance(args);
         } catch (Exception e) {
-            throw new ContextException("Could no create bean from constructor: " + constructor, e);
+            throw new ContextException("Could not create bean from constructor: " + constructor, e);
         }
     }
 
