@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
-
 plugins {
     `java-library`
     `maven-publish`
@@ -8,11 +6,11 @@ plugins {
 }
 
 group = "com.coditory.quark"
-description = "Quark internationalization library"
+description = "Coditory Quark Context - Dependency Injection"
 
 publishing {
     publications.create<MavenPublication>("jvm") {
-        artifactId = project.archivesName.get()
+        artifactId = project.name
         from(components["java"])
         versionMapping {
             usage("java-api") {
@@ -23,9 +21,9 @@ publishing {
             }
         }
         pom {
-            name.set(project.archivesName.get())
-            description.set(project.description ?: rootProject.description)
-            url.set("https://github.com/coditory/quark-i18n")
+            name.set(project.name)
+            description.set(project.description)
+            url.set("https://github.com/coditory/quark-context")
             organization {
                 name = "Coditory"
                 url = "https://coditory.com"
@@ -38,18 +36,18 @@ publishing {
             }
             developers {
                 developer {
-                    id.set("ogesaku")
-                    name.set("ogesaku")
-                    email.set("ogesaku@gmail.com")
+                    id.set("coditory")
+                    name.set("Coditory")
+                    email.set("admin@coditory.com")
                 }
             }
             scm {
-                connection.set("scm:git:git://github.com/coditory/quark-i18n.git")
-                url.set("https://github.com/coditory/quark-i18n")
+                connection.set("scm:git:git://github.com/coditory/quark-context.git")
+                url.set("https://github.com/coditory/quark-context")
             }
             issueManagement {
                 system.set("GitHub")
-                url.set("https://github.com/coditory/quark-i18n/issues")
+                url.set("https://github.com/coditory/quark-context/issues")
             }
         }
     }
@@ -62,18 +60,14 @@ signing {
     sign(publishing.publications["jvm"])
 }
 
-tasks.javadoc {
-    if (JavaVersion.current().isJava9Compatible) {
-        (options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
-    }
-}
-
 nexusPublishing {
     repositories {
         sonatype {
-            System.getenv("OSSRH_STAGING_PROFILE_ID")?.let { stagingProfileId = it }
-            System.getenv("OSSRH_USERNAME")?.let { username.set(it) }
-            System.getenv("OSSRH_PASSWORD")?.let { password.set(it) }
+            System.getenv("SONATYPE_STAGING_PROFILE_ID")?.let { stagingProfileId = it }
+            System.getenv("SONATYPE_USERNAME")?.let { username.set(it) }
+            System.getenv("SONATYPE_PASSWORD")?.let { password.set(it) }
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
         }
     }
 }

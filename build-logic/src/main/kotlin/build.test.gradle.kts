@@ -4,23 +4,17 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id("build.java")
+    id("java-library")
     id("groovy")
 }
 
 val libs = extensions.getByType(org.gradle.accessors.dm.LibrariesForLibs::class)
-
-dependencies {
-    testImplementation(libs.groovy)
-}
 
 testing {
     suites {
         val test by getting(JvmTestSuite::class)
 
         val integrationTest by registering(JvmTestSuite::class) {
-            testType.set(TestSuiteType.INTEGRATION_TEST)
-
             val mainSourceSet = project.sourceSets.main.get()
             val testSourceSet = project.sourceSets.test.get()
 

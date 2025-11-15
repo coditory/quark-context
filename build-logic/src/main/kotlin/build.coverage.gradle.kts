@@ -28,7 +28,7 @@ tasks.register<JacocoReport>("coverage") {
     description = "Creates combined coverage report"
     executionData(fileTree(project.layout.buildDirectory).include("jacoco/*.exec"))
     sourceSets(project.extensions.getByType(JavaPluginExtension::class).sourceSets.getByName("main"))
-    dependsOn(tasks.findByName("test"), tasks.findByName("integrationTest"))
+    dependsOn(tasks.findByName("test")!!, tasks.findByName("integrationTest")!!)
     reports {
         xml.required.set(true)
         html.required.set(true)

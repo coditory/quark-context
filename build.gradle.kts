@@ -1,7 +1,6 @@
 plugins {
     id("build.version")
     id("build.java")
-    id("build.kotlin")
     id("build.test")
     id("build.coverage")
     id("build.publishing")
@@ -14,4 +13,5 @@ dependencies {
     testImplementation(libs.logback.classic)
     testImplementation(libs.spock.core)
     testImplementation(libs.jsonassert)
+    testImplementation(libs.junit.platform)
 }
