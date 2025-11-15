@@ -7,7 +7,7 @@ import com.coditory.quark.context.annotations.Dependency
 class Bar {
     final List<Foo> foo
 
-    Bar(@Dependency(required = false) List<Foo> foo) {
+    Bar(@Dependency(optional = true) List<Foo> foo) {
         this.foo = foo
     }
 }

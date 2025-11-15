@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER})
 public @interface Dependency {
     String value() default "";
+
     String name() default "";
-    boolean required() default true;
+
+    boolean optional() default false;
 }

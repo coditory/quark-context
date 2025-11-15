@@ -1,22 +1,13 @@
 package com.coditory.quark.context.events
 
 import com.coditory.quark.context.Context
-import com.coditory.quark.context.ResolutionPath
 import com.coditory.quark.context.annotations.Bean
 import com.coditory.quark.context.annotations.Inject
 import com.coditory.quark.context.base.InMemEventHandler
 import com.coditory.quark.eventbus.EventHandler
 import spock.lang.Specification
 
-import static com.coditory.quark.context.BeanDescriptor.descriptor
-import static com.coditory.quark.context.events.ContextEvent.BeanPostCloseEvent
-import static com.coditory.quark.context.events.ContextEvent.BeanPostCreateEvent
-import static com.coditory.quark.context.events.ContextEvent.BeanPreCloseEvent
-import static com.coditory.quark.context.events.ContextEvent.BeanPreCreateEvent
-import static com.coditory.quark.context.events.ContextEvent.ContextPostCloseEvent
-import static com.coditory.quark.context.events.ContextEvent.ContextPostCreateEvent
-import static com.coditory.quark.context.events.ContextEvent.ContextPreCloseEvent
-import static com.coditory.quark.context.events.ContextEvent.ContextPreCreateEvent
+import static com.coditory.quark.context.events.ConfigurationEventEmissionSpec.stringifyEvents
 
 class ContextEventEmissionSpec extends Specification {
     SimpleHandler contextHandler = new SimpleHandler()
@@ -29,9 +20,9 @@ class ContextEventEmissionSpec extends Specification {
 
     def "should emit events when context is built"() {
         expect:
-            contextHandler.events == [
-                    new ContextPreCreateEvent(),
-                    new ContextPostCreateEvent()
+            stringifyEvents(contextHandler.events) == [
+                    "ContextPreCreateEvent",
+                    "ContextPostCreateEvent"
             ]
     }
 
@@ -42,13 +33,13 @@ class ContextEventEmissionSpec extends Specification {
             context.get(A)
             context.get(C)
         then:
-            contextHandler.events == [
-                    new BeanPreCreateEvent(descriptor(A), ResolutionPath.of(A)),
-                    new BeanPreCreateEvent(descriptor(B), ResolutionPath.of(A, B)),
-                    new BeanPostCreateEvent(descriptor(B), ResolutionPath.of(A, B)),
-                    new BeanPostCreateEvent(descriptor(A), ResolutionPath.of(A)),
-                    new BeanPreCreateEvent(descriptor(C), ResolutionPath.of(C)),
-                    new BeanPostCreateEvent(descriptor(C), ResolutionPath.of(C))
+            stringifyEvents(contextHandler.events) == [
+                    "BeanPreCreateEvent:A",
+                    "BeanPreCreateEvent:B",
+                    "BeanPostCreateEvent:B",
+                    "BeanPostCreateEvent:A",
+                    "BeanPreCreateEvent:C",
+                    "BeanPostCreateEvent:C"
             ]
     }
 
@@ -60,15 +51,15 @@ class ContextEventEmissionSpec extends Specification {
         when:
             context.close()
         then:
-            contextHandler.events == [
-                    new ContextPreCloseEvent(),
-                    new BeanPreCloseEvent(descriptor(A)),
-                    new BeanPostCloseEvent(descriptor(A)),
-                    new BeanPreCloseEvent(descriptor(B)),
-                    new BeanPostCloseEvent(descriptor(B)),
-                    new BeanPreCloseEvent(descriptor(C)),
-                    new BeanPostCloseEvent(descriptor(C)),
-                    new ContextPostCloseEvent(),
+            stringifyEvents(contextHandler.events) == [
+                    "ContextPreCloseEvent",
+                    "BeanPreCloseEvent:A",
+                    "BeanPostCloseEvent:A",
+                    "BeanPreCloseEvent:B",
+                    "BeanPostCloseEvent:B",
+                    "BeanPreCloseEvent:C",
+                    "BeanPostCloseEvent:C",
+                    "ContextPostCloseEvent"
             ]
             contextHandler.reset()
     }

@@ -10,7 +10,7 @@ class Bar {
 
     Bar(
             @Dependency(name = "fooo") Foo foo,
-            @Dependency(name = "baaz", required = false) Baz baz
+            @Dependency(name = "baaz", optional = true) Baz baz
     ) {
         this.foo = foo
         this.baz = baz

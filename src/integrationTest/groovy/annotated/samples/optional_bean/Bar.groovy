@@ -8,7 +8,7 @@ class Bar {
     final Foo foo;
     final Baz baz;
 
-    Bar(@Dependency(required = false) Foo foo, @Dependency(required = false) Baz baz) {
+    Bar(@Dependency(optional = true) Foo foo, @Dependency(optional = true) Baz baz) {
         this.foo = foo
         this.baz = baz
     }

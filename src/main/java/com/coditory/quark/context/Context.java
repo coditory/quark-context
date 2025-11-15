@@ -97,7 +97,8 @@ public final class Context implements Closeable {
         this.eventBus = eventBus;
         // register self
         BeanDescriptor<Context> descriptor = descriptor(Context.class);
-        BeanHolder<Context> holder = holder(descriptor, (ResolutionContext r) -> this, true);
+        BeanConfig config = BeanConfig.DEFAULT.withEager(true);
+        BeanHolder<Context> holder = holder(descriptor, (ResolutionContext r) -> this, config);
         holder.setEventEmitter(new DummyEventEmitter());
         beanHolders.put(descriptor, List.of(holder));
         // index beans

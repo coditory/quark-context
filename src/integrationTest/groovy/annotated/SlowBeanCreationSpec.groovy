@@ -19,15 +19,28 @@ class SlowBeanCreationSpec extends Specification {
         rootLogger.detachAppender(appender)
     }
 
-    def "should log slow bean initialization"() {
+    def "should log slow bean creation"() {
         given:
-            Context context = Context.scanPackage(annotated.samples.slow_beans.Bar)
+            Context context = Context.scanPackage(annotated.samples.slow_beans.Foo)
         when:
-            annotated.samples.slow_beans.Baz baz = context.get(annotated.samples.slow_beans.Baz)
+            context.get(annotated.samples.slow_beans.Foo)
+
+        then:
+            List<String> logs = appender.getLogsByMessagePrefix("Slow bean creation")
+            logs.size() == 2
+            logs.get(0).startsWith("[WARN] Slow bean creation. Bean: Bar")
+            logs.get(1).startsWith("[WARN] Slow bean creation. Bean: Foo")
+    }
+
+    def "should skip logging slow bean creation with custom threshold"() {
+        given:
+            Context context = Context.scanPackage(annotated.samples.slow_beans_annotated.Foo)
+        when:
+            context.get(annotated.samples.slow_beans_annotated.Foo)
 
         then:
             List<String> logs = appender.getLogsByMessagePrefix("Slow bean creation")
             logs.size() == 1
-            logs.first().startsWith("[WARN] Slow bean creation. Bean: Bar")
+            logs.get(0).startsWith("[WARN] Slow bean creation. Bean: Bar")
     }
 }

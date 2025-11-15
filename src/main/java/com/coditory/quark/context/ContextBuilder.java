@@ -184,7 +184,8 @@ public final class ContextBuilder {
         String name = configuration.name().isBlank()
                 ? configuration.value()
                 : configuration.name();
-        BeanHolder<T> holder = holder(descriptor(type, name), fromConstructor(type), configuration.eager());
+        BeanConfig config = BeanConfig.fromAnnotationOrDefault(configuration);
+        BeanHolder<T> holder = holder(descriptor(type, name), fromConstructor(type), config);
         addBeanHolder(holder);
         for (Method method : type.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Bean.class)) {
@@ -204,7 +205,8 @@ public final class ContextBuilder {
         String name = annotation.name().isBlank()
                 ? annotation.value()
                 : annotation.name();
-        BeanHolder<T> holder = holder(descriptor(type, name), creator, annotation.eager());
+        BeanConfig config = BeanConfig.fromAnnotationOrDefault(annotation);
+        BeanHolder<T> holder = holder(descriptor(type, name), creator, config);
         addBeanHolder(holder);
     }
 
@@ -228,7 +230,8 @@ public final class ContextBuilder {
     public <T> ContextBuilder add(@NotNull T bean) {
         expectNonNull(bean, "bean");
         BeanDescriptor<T> descriptor = descriptor((Class<T>) bean.getClass());
-        BeanHolder<T> holder = holder(descriptor, (ctx) -> bean, true);
+        BeanConfig config = BeanConfig.DEFAULT.withEager(true);
+        BeanHolder<T> holder = holder(descriptor, (ctx) -> bean, config);
         addBeanHolder(holder);
         return this;
     }
@@ -239,7 +242,8 @@ public final class ContextBuilder {
         expectNonNull(bean, "bean");
         expectNonNull(name, "name");
         BeanDescriptor<T> descriptor = descriptor((Class<T>) bean.getClass(), name);
-        BeanHolder<T> holder = holder(descriptor, (ctx) -> bean, true);
+        BeanConfig config = BeanConfig.DEFAULT.withEager(true);
+        BeanHolder<T> holder = holder(descriptor, (ctx) -> bean, config);
         addBeanHolder(holder);
         return this;
     }

@@ -1,5 +1,6 @@
 package com.coditory.quark.context;
 
+import com.coditory.quark.context.annotations.Bean;
 import com.coditory.quark.context.events.ContextEvent.BeanPostCreateEvent;
 import com.coditory.quark.context.events.ContextEvent.BeanPreCreateEvent;
 import com.coditory.quark.eventbus.EventHandler;
@@ -28,13 +29,13 @@ final class SlowBeanCreationDetector {
 
     @EventHandler
     public void handle(BeanPreCreateEvent event) {
-        timers.put(event.bean(), Timer.start());
-        totalTimers.put(event.bean(), Timer.start());
-        BeanDescriptor<?> parent = event.path().getParent(event.bean());
+        timers.put(event.descriptor(), Timer.start());
+        totalTimers.put(event.descriptor(), Timer.start());
+        BeanDescriptor<?> parent = event.path().getParent(event.descriptor());
         if (parent != null) {
             dependencies.computeIfAbsent(parent, (k) -> new HashSet<>())
-                    .add(event.bean());
-            parentDependencies.computeIfAbsent(event.bean(), (k) -> new HashSet<>())
+                    .add(event.descriptor());
+            parentDependencies.computeIfAbsent(event.descriptor(), (k) -> new HashSet<>())
                     .add(parent);
             Timer parentTimer = timers.get(parent);
             if (parentTimer != null) {
@@ -45,25 +46,43 @@ final class SlowBeanCreationDetector {
 
     @EventHandler
     public void handle(BeanPostCreateEvent event) {
-        for (BeanDescriptor<?> parent : parentDependencies.getOrDefault(event.bean(), Set.of())) {
+        for (BeanDescriptor<?> parent : parentDependencies.getOrDefault(event.descriptor(), Set.of())) {
             Set<BeanDescriptor<?>> children = dependencies.computeIfAbsent(parent, (k) -> new HashSet<>());
-            children.remove(event.bean());
+            children.remove(event.descriptor());
             Timer parentTimer = timers.get(parent);
             if (children.isEmpty() && parentTimer != null) {
                 parentTimer.resume();
             }
         }
-        dependencies.remove(event.bean());
-        parentDependencies.remove(event.bean());
-        Timer timer = timers.get(event.bean());
+        dependencies.remove(event.descriptor());
+        parentDependencies.remove(event.descriptor());
+        reportTime(event);
+        reportTotalTime(event);
+    }
+
+    private void reportTime(BeanPostCreateEvent event) {
+        Timer timer = timers.get(event.descriptor());
         timer.pause();
-        if (timerThreshold != null && timerThreshold.minus(timer.measure()).isNegative()) {
-            logger.warn("Slow bean creation. Bean: " + event.bean().toShortString() + ". Duration: " + timer.measureAndFormat());
+        BeanConfig config = event.config();
+        if (config.creationTimeMs() == -2) return;
+        Duration threshold = (config.creationTimeMs() == -1)
+                ? timerThreshold
+                : Duration.ofMillis(config.creationTimeMs());
+        if (threshold != null && threshold.minus(timer.measure()).isNegative()) {
+            logger.warn("Slow bean creation. Bean: {}. Duration: {}", event.descriptor().toShortString(), timer.measureAndFormat());
         }
-        Timer totalTimer = totalTimers.get(event.bean());
-        totalTimer.pause();
-        if (totalTimerThreshold != null && totalTimerThreshold.minus(totalTimer.measure()).isNegative()) {
-            logger.warn("Slow bean creation with dependencies. Bean: " + event.bean().toShortString() + ". Duration: " + timer.measureAndFormat());
+    }
+
+    private void reportTotalTime(BeanPostCreateEvent event) {
+        Timer timer = totalTimers.get(event.descriptor());
+        timer.pause();
+        BeanConfig config = event.config();
+        if (config.creationTotalTimeMs() == -2) return;
+        Duration threshold = (config.creationTotalTimeMs() == -1)
+                ? totalTimerThreshold
+                : Duration.ofMillis(config.creationTotalTimeMs());
+        if (threshold != null && threshold.minus(timer.measure()).isNegative()) {
+            logger.warn("Slow bean creation with dependencies. Bean: {}. Duration: {}", event.descriptor().toShortString(), timer.measureAndFormat());
         }
     }
 }

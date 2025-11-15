@@ -15,30 +15,30 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toSet;
 
 final class BeanHolder<T> {
-    static <T> BeanHolder<T> holder(BeanDescriptor<T> descriptor, BeanCreator<T> creator, boolean eager) {
-        return new BeanHolder<>(descriptor, creator, eager);
+    static <T> BeanHolder<T> holder(BeanDescriptor<T> descriptor, BeanCreator<T> creator, BeanConfig config) {
+        return new BeanHolder<>(descriptor, creator, config);
     }
 
     static <T> BeanHolder<T> holder(BeanDescriptor<T> descriptor, BeanCreator<T> creator) {
-        return new BeanHolder<>(descriptor, creator, false);
+        return new BeanHolder<>(descriptor, creator, BeanConfig.DEFAULT);
     }
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final BeanCreator<T> creator;
     private final BeanDescriptor<T> descriptor;
+    private final BeanConfig config;
     private final Set<Class<?>> classHierarchy;
-    private final boolean eager;
     private EventEmitter eventEmitter;
     private T bean;
     private boolean initialized = false;
     private boolean postInitialized = false;
     private boolean closed = false;
 
-    private BeanHolder(BeanDescriptor<T> descriptor, BeanCreator<T> creator, boolean eager) {
+    private BeanHolder(BeanDescriptor<T> descriptor, BeanCreator<T> creator, BeanConfig config) {
         this.creator = requireNonNull(creator);
         this.descriptor = requireNonNull(descriptor);
         this.classHierarchy = HierarchyIterator.getClassHierarchy(descriptor.type());
-        this.eager = eager;
+        this.config = config;
     }
 
     void setEventEmitter(EventEmitter eventEmitter) {
@@ -49,7 +49,7 @@ final class BeanHolder<T> {
     }
 
     public boolean isEager() {
-        return eager;
+        return config.eager();
     }
 
     public boolean isInitialized() {
@@ -106,14 +106,14 @@ final class BeanHolder<T> {
             }
             path = path.add(descriptor);
             context = context.withPath(path);
-            eventEmitter.emit(new ContextEvent.BeanPreCreateEvent(descriptor, path));
-            createBean(context);
-            eventEmitter.emit(new ContextEvent.BeanPostCreateEvent(descriptor, path));
+            eventEmitter.emit(new ContextEvent.BeanPreCreateEvent(descriptor, config, path));
+            T bean = createBean(context);
+            eventEmitter.emit(new ContextEvent.BeanPostCreateEvent(descriptor, config, path, bean));
         }
         return bean;
     }
 
-    private void createBean(ResolutionContext context) {
+    private T createBean(ResolutionContext context) {
         Timer timer = Timer.start();
         bean = creator.create(context);
         log.debug("Created bean {} in {}", descriptor.toShortString(), timer.measureAndFormat());
@@ -121,15 +121,16 @@ final class BeanHolder<T> {
             initializeBean(bean, descriptor, context);
             initialized = true;
         }
+        return bean;
     }
 
     void close(ResolutionContext context) {
         if (!closed) {
             expectEventEmitter();
-            eventEmitter.emit(new ContextEvent.BeanPreCloseEvent(descriptor));
+            eventEmitter.emit(new ContextEvent.BeanPreCloseEvent(descriptor, config, bean));
             closeBean(bean, descriptor, context);
             closed = true;
-            eventEmitter.emit(new ContextEvent.BeanPostCloseEvent(descriptor));
+            eventEmitter.emit(new ContextEvent.BeanPostCloseEvent(descriptor, config, bean));
         }
     }
 

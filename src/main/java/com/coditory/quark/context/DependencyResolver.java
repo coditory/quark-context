@@ -29,8 +29,8 @@ final class DependencyResolver {
         }
 
         @Override
-        public boolean required() {
-            return true;
+        public boolean optional() {
+            return false;
         }
     };
 
@@ -79,7 +79,7 @@ final class DependencyResolver {
         String name = dependency.name().isBlank()
                 ? dependency.value()
                 : dependency.name();
-        boolean required = dependency.required();
+        boolean optional = dependency.optional();
         if (!name.isEmpty() && List.class == parameterType) {
             throw new ContextException("Detected named @Dependency for a list of dependencies. " +
                     "Dependency of list of beans should not be named");
@@ -88,34 +88,34 @@ final class DependencyResolver {
             ParameterizedType parameterizedType = (ParameterizedType) genericType;
             Type type = parameterizedType.getActualTypeArguments()[0];
             if (type instanceof Class<?> listItemType) {
-                return required
-                        ? context.getAll(listItemType)
-                        : context.getAllOrEmpty(listItemType);
+                return optional
+                        ? context.getAllOrEmpty(listItemType)
+                        : context.getAll(listItemType);
             }
             if (type instanceof WildcardType wildcardItemType) {
-                if (wildcardItemType.getUpperBounds() == null || wildcardItemType.getUpperBounds().length != 1) {
+                if (wildcardItemType.getUpperBounds().length != 1) {
                     throw new IllegalArgumentException("Invalid number of upper bound arguments");
                 }
-                if (wildcardItemType.getLowerBounds() != null && wildcardItemType.getLowerBounds().length != 0) {
+                if (wildcardItemType.getLowerBounds().length != 0) {
                     throw new IllegalArgumentException("Unexpected lower bound type in list dependency");
                 }
                 Type upperBound = wildcardItemType.getUpperBounds()[0];
                 if (upperBound instanceof Class<?> lowerBoundClass) {
-                    return required
-                            ? context.getAll(lowerBoundClass)
-                            : context.getAllOrEmpty(lowerBoundClass);
+                    return optional
+                            ? context.getAllOrEmpty(lowerBoundClass)
+                            : context.getAll(lowerBoundClass);
                 }
                 throw new IllegalArgumentException("Unexpected lower bound type: " + upperBound);
             }
             throw new ContextException("Invalid List generic type in dependency: " + name);
         }
         if (!name.isEmpty()) {
-            return required
-                    ? context.get(parameterType, name)
-                    : context.getOrNull(parameterType, name);
+            return optional
+                    ? context.getOrNull(parameterType, name)
+                    : context.get(parameterType, name);
         }
-        return required
-                ? context.get(parameterType)
-                : context.getOrNull(parameterType);
+        return optional
+                ? context.getOrNull(parameterType)
+                : context.get(parameterType);
     }
 }

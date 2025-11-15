@@ -1,8 +1,8 @@
 package annotated.samples.config
 
 import com.coditory.quark.context.annotations.Bean
-import com.coditory.quark.context.annotations.Dependency
 import com.coditory.quark.context.annotations.Configuration
+import com.coditory.quark.context.annotations.Dependency
 
 @Configuration
 class SampleConfig {
@@ -25,7 +25,7 @@ class SampleConfig {
     Foo foo2(
             Bar bar,
             @Dependency("foooo") Foo foooo,
-            @Dependency(required = false) Baz baz
+            @Dependency(optional = true) Baz baz
     ) {
         return new Foo("foo2", bar)
     }
